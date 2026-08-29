@@ -19,6 +19,19 @@ Microservicio central de CityData v2 responsable de recibir las sesiones de medi
 
 ---
 
+## 🏗️ Construcción Docker / Dokploy (Build Time)
+
+> [!IMPORTANT]
+> **Variable en tiempo de construcción (Build Argument):**
+> Al compilar la imagen Docker en Dokploy o mediante `docker build`, es **obligatorio** pasar `DATABASE_URL` como **Build Argument** (`ARG DATABASE_URL`). Esto permite que Prisma genere el cliente tipado (`prisma:generate:mea`) durante la fase de compilación del contenedor:
+>
+> * **Build Argument en Dokploy / Docker**:
+>   ```env
+>   DATABASE_URL=postgresql://postgres:your_postgres_password@citydata-postgres-b1mysl:5432/service_measurement
+>   ```
+
+---
+
 ## 📂 Volúmenes y Persistencia en Dokploy / Docker
 
 If you want to persist data in this service use the following config to setup the volumes:
@@ -53,13 +66,15 @@ Una medición en PostgreSQL se modela con campos fijos de indexación relacional
 ## 🛠️ Variables de Entorno (`.env`)
 
 ```env
-NODE_ENV=development
+NODE_ENV=production
 APP_NAME=service-measurement
 PORT=4006
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/measurement_db?schema=public"
-VALKEY_URL="redis://localhost:6379"
-UPLOAD_PATH="uploads"
-LOKI_URL="http://host.docker.internal:3100"
+
+LOKI_URL=http://citydata-loki:3100
+VALKEY_URL=redis://:your_valkey_password@valkey:6379/0
+CACHE_TTL=10000
+
+DATABASE_URL=postgresql://postgres:your_postgres_password@citydata-postgres-b1mysl:5432/service_measurement
 ```
 
 ---
@@ -75,6 +90,10 @@ npx prisma db push --schema ./prisma/measurement/schema.prisma
 
 # 3. Iniciar en modo desarrollo con recarga en caliente
 yarn start:dev
+
+# 4. Compilar e iniciar en producción
+yarn build
+yarn start:prod
 ```
 
 ---
