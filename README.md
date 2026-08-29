@@ -19,6 +19,28 @@ Microservicio central de CityData v2 responsable de recibir las sesiones de medi
 
 ---
 
+## 📂 Volúmenes y Persistencia en Dokploy / Docker
+
+If you want to persist data in this service use the following config to setup the volumes:
+
+> **Important:** Please remember to click **Redeploy** after adding, editing, or deleting a mount to apply the changes.
+
+| Mount Type | Host Path | Mount Path | Mode | Propósito |
+| :--- | :--- | :--- | :--- | :--- |
+| **BIND** | `/root/service-measurement` | `/app/files` | Read/Write | Persistencia de imágenes procesadas y archivos de auditoría |
+
+### Permisos requeridos en el Host (Linux):
+```bash
+# 1. Crear directorio en el servidor host
+mkdir -p /root/service-measurement
+
+# 2. Configurar permisos de lectura y escritura para el contenedor
+chmod 755 /root
+chmod 777 /root/service-measurement
+```
+
+---
+
 ## 📦 Estructura de Datos (`JSONB`)
 
 Una medición en PostgreSQL se modela con campos fijos de indexación relacional y tres columnas `JSONB` de alta flexibilidad:
