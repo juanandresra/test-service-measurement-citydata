@@ -1,0 +1,60 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "./generated"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// ======================================================
+/// Measurement
+/// ======================================================
+
+model Measurement {
+  id String @id @default(uuid()) @db.Uuid
+
+  organizationId String @map("organization_id") @db.Uuid
+
+  /// External reference to Research Service
+  researchId String @map("research_id") @db.Uuid
+
+  campaignId String @map("campaign_id") @db.Uuid
+
+  /// Versión del formulario vigente al momento de la captura
+  formVersion String @map("form_version") @db.VarChar(20)
+
+  /// External reference to User Service — el MEASURER que capturó esta medición
+  userId String @map("user_id") @db.Uuid
+
+  /// Respuestas únicas del header, ej: { "header_text_1": "visible" }
+  header Json @db.JsonB
+
+  /// Array de registros del body, cada uno con sus answers + meta (gps, timestamps, location)
+  /// ej: [{ id, answers, meta: { gpsTimestamp, deviceTimestamp, serverTimestamp, location }, createdAt }]
+  body Json @db.JsonB
+
+  /// Datos calculados/agregados de la medición completa: total de registros,
+  /// bounding box o centroide de las ubicaciones, rango de fechas, etc.
+  /// Se calcula en el momento de la subida, no viene directo del cliente.
+  meta Json? @db.JsonB
+
+  /// Fecha a partir de la cual la medición debe ser revisada
+  /// para determinar si puede ser eliminada.
+  deletionReviewAt DateTime? @map("deletion_review_at")
+
+  deletedAt DateTime? @map("deleted_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([organizationId])
+  @@index([researchId])
+  @@index([campaignId])
+  @@index([userId])
+  @@index([organizationId, campaignId, deletedAt])
+  @@index([campaignId, userId])
+  @@map("measurement")
+}
