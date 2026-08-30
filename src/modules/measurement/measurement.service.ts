@@ -531,55 +531,48 @@ export class MeasurementService {
       : null;
     const dateTo = query.dateTo ? toEndOfDayIfDateOnly(query.dateTo) : null;
 
-    const rows = await this.prisma.$queryRaw<FlattenedMeasurementRow[]>`
-      SELECT
-        m.id AS measurement_id,
-        m.form_version,
-        m.user_id,
-        m.created_at,
-        elem.value AS record
-      FROM measurement m,
-      LATERAL jsonb_array_elements(m.body) AS elem(value)
-      WHERE m.organization_id = ${organizationId}::uuid
-        AND m.research_id = ${researchId}::uuid
-        AND m.campaign_id = ${campaignId}::uuid
-        AND m.deleted_at IS NULL
-        AND (elem.value->>'deletedAt') IS NULL
-        AND (${userIds}::uuid[] IS NULL OR m.user_id = ANY(${userIds}::uuid[]))
-        AND (
-          ${dateFrom}::timestamptz IS NULL
-          OR (elem.value #>> array['meta', 'timestamps', elem.value->'meta'->'timestamps'->>'resolved'])::timestamptz >= ${dateFrom}::timestamptz
-        )
-        AND (
-          ${dateTo}::timestamptz IS NULL
-          OR (elem.value #>> array['meta', 'timestamps', elem.value->'meta'->'timestamps'->>'resolved'])::timestamptz <= ${dateTo}::timestamptz
-        )
-      ORDER BY (elem.value #>> array['meta', 'timestamps', elem.value->'meta'->'timestamps'->>'resolved'])::timestamptz DESC
-      LIMIT ${limit} OFFSET ${offset}
-    `;
+    const where: any = {
+      organizationId,
+      researchId,
+      campaignId,
+      deletedAt: null,
+    };
 
-    const countResult = await this.prisma.$queryRaw<{ total: bigint }[]>`
-      SELECT COUNT(*)::bigint AS total
-      FROM measurement m,
-      LATERAL jsonb_array_elements(m.body) AS elem(value)
-      WHERE m.organization_id = ${organizationId}::uuid
-        AND m.research_id = ${researchId}::uuid
-        AND m.campaign_id = ${campaignId}::uuid
-        AND m.deleted_at IS NULL
-        AND (elem.value->>'deletedAt') IS NULL
-        AND (${userIds}::uuid[] IS NULL OR m.user_id = ANY(${userIds}::uuid[]))
-        AND (
-          ${dateFrom}::timestamptz IS NULL
-          OR (elem.value #>> array['meta', 'timestamps', elem.value->'meta'->'timestamps'->>'resolved'])::timestamptz >= ${dateFrom}::timestamptz
-        )
-        AND (
-          ${dateTo}::timestamptz IS NULL
-          OR (elem.value #>> array['meta', 'timestamps', elem.value->'meta'->'timestamps'->>'resolved'])::timestamptz <= ${dateTo}::timestamptz
-        )
-    `;
+    if (userIds && userIds.length > 0) {
+      where.userId = { in: userIds };
+    }
 
-    const total = Number(countResult[0]?.total ?? 0);
-    const measurementIds = [...new Set(rows.map((r) => r.measurement_id))];
+    if (dateFrom || dateTo) {
+      where.resolvedAt = {};
+      if (dateFrom) where.resolvedAt.gte = dateFrom;
+      if (dateTo) where.resolvedAt.lte = dateTo;
+    }
+
+    const [total, itemRows] = await Promise.all([
+      this.prisma.measurementItem.count({ where }),
+      this.prisma.measurementItem.findMany({
+        where,
+        orderBy: { resolvedAt: 'desc' },
+        skip: offset,
+        take: limit,
+        include: {
+          measurement: {
+            select: {
+              id: true,
+              formVersion: true,
+              header: true,
+              meta: true,
+              createdAt: true,
+            },
+          },
+        },
+      }),
+    ]);
+
+    const measurementIds = [
+      ...new Set(itemRows.map((r) => r.measurementId)),
+    ];
+
     const headerRows =
       measurementIds.length > 0
         ? await this.prisma.measurement.findMany({
@@ -614,35 +607,53 @@ export class MeasurementService {
         .filter((entry): entry is [string, unknown] => entry !== undefined),
     );
 
-    const uniqueUserIds = [...new Set(rows.map((row) => row.user_id))];
+    const uniqueUserIds = [...new Set(itemRows.map((row) => row.userId))];
     const usersById = await this.getUsersMap(uniqueUserIds);
 
-    const items = rows.map((row) => {
-      const parentRow = headerRows.find((h) => h.id === row.measurement_id);
-      let parentMeta = parentRow?.meta as Record<string, unknown> | undefined;
+    const items = itemRows.map((row) => {
+      let parentMeta = row.measurement?.meta as Record<string, unknown> | undefined;
       if (typeof parentMeta === 'string') {
         try {
           parentMeta = JSON.parse(parentMeta) as Record<string, unknown>;
         } catch {}
       }
-      let rowMeta = row.record.meta as Record<string, unknown> | undefined;
-      if (typeof rowMeta === 'string') {
-        try {
-          rowMeta = JSON.parse(rowMeta) as Record<string, unknown>;
-        } catch {}
-      }
-      const device = (rowMeta?.device ?? parentMeta?.device ?? null) as Record<string, unknown> | null;
+
+      const location = (row.metaLocation as Record<string, unknown> | null) ?? {
+        latitude: row.latitude,
+        longitude: row.longitude,
+        address: null,
+        accuracy: 0,
+      };
+
+      const timestamps = (row.metaTimestamps as Record<string, unknown> | null) ?? {
+        gps: null,
+        device: row.createdAt.toISOString(),
+        manual: null,
+        server: row.resolvedAt.toISOString(),
+        resolved: row.resolvedSource,
+      };
+
+      const itemMeta: Record<string, unknown> = {
+        location,
+        timestamps,
+        device: parentMeta?.device ?? null,
+      };
+
+      const device = (parentMeta?.device ?? null) as Record<string, unknown> | null;
+
       return {
-        id: row.record.id,
-        measurementId: row.measurement_id,
-        formVersion: row.form_version,
-        userId: row.user_id,
-        user: this.toResolvedUser(row.user_id, usersById.get(row.user_id)),
-        answers: row.record.answers,
-        meta: row.record.meta,
+        id: row.id,
+        measurementId: row.measurementId,
+        formVersion: row.measurement?.formVersion ?? '1.0',
+        userId: row.userId,
+        user: this.toResolvedUser(row.userId, usersById.get(row.userId)),
+        answers: row.answers,
+        meta: itemMeta,
         device,
-        savedAt: row.created_at ? new Date(row.created_at).toISOString() : row.record.createdAt,
-        createdAt: row.record.createdAt,
+        savedAt: row.measurement?.createdAt
+          ? new Date(row.measurement.createdAt).toISOString()
+          : row.createdAt.toISOString(),
+        createdAt: row.createdAt.toISOString(),
       };
     });
 
@@ -966,7 +977,9 @@ export class MeasurementService {
 
     const rawHeaders = result.header as Record<string, Record<string, unknown>>;
     const headerColumns = collectColumns(Object.values(rawHeaders));
-    const answerColumns = collectColumns(measurements.map((m) => m.answers));
+    const answerColumns = collectColumns(
+      measurements.map((m) => (m.answers as Record<string, unknown>) || {}),
+    );
 
     const columnsOrder = [
       ...headerColumns,
@@ -1074,8 +1087,10 @@ export class MeasurementService {
           currentCol++;
         }
 
+        const answersRecord =
+          (measurement.answers as Record<string, unknown>) || {};
         for (const colName of answerColumns) {
-          const rawValue = measurement.answers[colName];
+          const rawValue = answersRecord[colName];
           let cellValue = this.formatCellValueForExcel(rawValue);
 
           if (typeof rawValue === 'string' && rawValue.includes('/image/')) {
@@ -1133,7 +1148,9 @@ export class MeasurementService {
         );
         currentCol++;
 
-        const currentVersion = measurement.formVersion ? `v${measurement.formVersion}` : 'v1.0';
+        const currentVersion = measurement.formVersion
+          ? `v${measurement.formVersion}`
+          : 'v1.0';
         worksheet.cell(currentRow, currentCol).string(currentVersion);
         maxColWidths[currentCol - 1] = Math.max(
           maxColWidths[currentCol - 1],
@@ -1141,7 +1158,8 @@ export class MeasurementService {
         );
         currentCol++;
 
-        const dev = (measurement as any).device ?? (measurement.meta as any)?.device;
+        const dev =
+          (measurement as any).device ?? (measurement.meta as any)?.device;
         const os = (dev?.os ? String(dev.os) : '').toLowerCase();
         const isIos =
           os.includes('ios') ||
@@ -1167,7 +1185,11 @@ export class MeasurementService {
         );
         currentCol++;
 
-        const latitudeVal = measurement.meta?.location?.latitude;
+        const itemMeta = (measurement.meta as Record<string, any>) || {};
+        const location = (itemMeta.location as Record<string, any>) || {};
+        const timestamps = (itemMeta.timestamps as Record<string, any>) || {};
+
+        const latitudeVal = location.latitude;
         const latitudeStr =
           latitudeVal !== undefined && latitudeVal !== null
             ? String(latitudeVal)
@@ -1179,7 +1201,7 @@ export class MeasurementService {
         );
         currentCol++;
 
-        const longitudeVal = measurement.meta?.location?.longitude;
+        const longitudeVal = location.longitude;
         const longitudeStr =
           longitudeVal !== undefined && longitudeVal !== null
             ? String(longitudeVal)
@@ -1209,9 +1231,8 @@ export class MeasurementService {
         );
         currentCol++;
 
-        const timestamps = measurement.meta?.timestamps;
-        const resolvedKey = timestamps?.resolved;
-        const resolvedTimestamp = resolvedKey && timestamps?.[resolvedKey];
+        const resolvedKey = timestamps.resolved;
+        const resolvedTimestamp = resolvedKey && timestamps[resolvedKey];
 
         const timestampStr = formatTz(resolvedTimestamp);
         worksheet.cell(currentRow, currentCol).string(timestampStr);
@@ -1221,7 +1242,7 @@ export class MeasurementService {
         );
         currentCol++;
 
-        const gpsStr = formatTz(timestamps?.gps);
+        const gpsStr = formatTz(timestamps.gps);
         worksheet.cell(currentRow, currentCol).string(gpsStr);
         maxColWidths[currentCol - 1] = Math.max(
           maxColWidths[currentCol - 1],
@@ -1229,7 +1250,7 @@ export class MeasurementService {
         );
         currentCol++;
 
-        const deviceStr = formatTz(timestamps?.device);
+        const deviceStr = formatTz(timestamps.device);
         worksheet.cell(currentRow, currentCol).string(deviceStr);
         maxColWidths[currentCol - 1] = Math.max(
           maxColWidths[currentCol - 1],
@@ -1237,7 +1258,7 @@ export class MeasurementService {
         );
         currentCol++;
 
-        const manualStr = formatTz(timestamps?.manual);
+        const manualStr = formatTz(timestamps.manual);
         worksheet.cell(currentRow, currentCol).string(manualStr);
         maxColWidths[currentCol - 1] = Math.max(
           maxColWidths[currentCol - 1],
@@ -1245,7 +1266,7 @@ export class MeasurementService {
         );
         currentCol++;
 
-        const serverStr = formatTz(timestamps?.server);
+        const serverStr = formatTz(timestamps.server);
         worksheet.cell(currentRow, currentCol).string(serverStr);
         maxColWidths[currentCol - 1] = Math.max(
           maxColWidths[currentCol - 1],
@@ -1261,10 +1282,11 @@ export class MeasurementService {
         );
         currentCol++;
 
-        worksheet.cell(currentRow, currentCol).string(measurement.id);
+        const uuidVal = measurement.id ?? '';
+        worksheet.cell(currentRow, currentCol).string(uuidVal);
         maxColWidths[currentCol - 1] = Math.max(
           maxColWidths[currentCol - 1],
-          measurement.id.length,
+          uuidVal.length,
         );
 
         currentRow++;
@@ -1318,45 +1340,47 @@ export class MeasurementService {
 
     this.logger.info(
       { organizationId, researchId, campaignId, userIds, dateFrom, dateTo },
-      'Fetching locations for given filters',
+      'Fetching locations for given filters from MeasurementItem',
     );
-    this.logger.info(query);
 
-    const rows = await this.prisma.$queryRaw<LocationRow[]>`
-      SELECT
-        m.user_id AS "userId",
-        (elem.value->'meta'->'location'->>'latitude')::float8 AS lat,
-        (elem.value->'meta'->'location'->>'longitude')::float8 AS lon,
-        (elem.value #>> array['meta', 'timestamps', elem.value->'meta'->'timestamps'->>'resolved']) AS date
-      FROM measurement m,
-      LATERAL jsonb_array_elements(m.body) AS elem(value)
-      WHERE m.organization_id = ${organizationId}::uuid
-        AND m.research_id = ${researchId}::uuid
-        AND m.campaign_id = ${campaignId}::uuid
-        AND m.deleted_at IS NULL
-        AND (elem.value->>'deletedAt') IS NULL
-        AND (${userIds}::uuid[] IS NULL OR m.user_id = ANY(${userIds}::uuid[]))
-        AND elem.value->'meta'->'location'->>'latitude' IS NOT NULL
-        AND elem.value->'meta'->'location'->>'longitude' IS NOT NULL
-        AND (
-          ${dateFrom}::timestamptz IS NULL
-          OR (elem.value #>> array['meta', 'timestamps', elem.value->'meta'->'timestamps'->>'resolved'])::timestamptz >= ${dateFrom}::timestamptz
-        )
-        AND (
-          ${dateTo}::timestamptz IS NULL
-          OR (elem.value #>> array['meta', 'timestamps', elem.value->'meta'->'timestamps'->>'resolved'])::timestamptz <= ${dateTo}::timestamptz
-        )
-      ORDER BY m.user_id, (elem.value #>> array['meta', 'timestamps', elem.value->'meta'->'timestamps'->>'resolved'])::timestamptz ASC
-    `;
+    const where: any = {
+      organizationId,
+      researchId,
+      campaignId,
+      deletedAt: null,
+      latitude: { not: null },
+      longitude: { not: null },
+    };
+
+    if (userIds && userIds.length > 0) {
+      where.userId = { in: userIds };
+    }
+
+    if (dateFrom || dateTo) {
+      where.resolvedAt = {};
+      if (dateFrom) where.resolvedAt.gte = dateFrom;
+      if (dateTo) where.resolvedAt.lte = dateTo;
+    }
+
+    const rows = await this.prisma.measurementItem.findMany({
+      where,
+      select: {
+        userId: true,
+        latitude: true,
+        longitude: true,
+        resolvedAt: true,
+      },
+      orderBy: [{ userId: 'asc' }, { resolvedAt: 'asc' }],
+    });
 
     const grouped = new Map<string, LocationPoint[]>();
 
     for (const row of rows) {
       const points = grouped.get(row.userId);
       const point: LocationPoint = {
-        lat: row.lat,
-        lon: row.lon,
-        date: row.date,
+        lat: row.latitude as number,
+        lon: row.longitude as number,
+        date: row.resolvedAt.toISOString(),
       };
 
       if (points) {
@@ -1385,30 +1409,27 @@ export class MeasurementService {
     const { groupBy, dateFrom, dateTo, userId, timezone } = query;
     const tz = timezone ?? 'UTC';
 
-    const resolvedTimestampExpr = `(elem.value #>> array['meta', 'timestamps', elem.value->'meta'->'timestamps'->>'resolved'])`;
-
     const filters: string[] = [
-      `m.organization_id = '${organizationId}'::uuid`,
-      `m.research_id = '${researchId}'::uuid`,
-      `m.campaign_id = '${campaignId}'::uuid`,
-      `m.deleted_at IS NULL`,
-      `(elem.value->>'deletedAt') IS NULL`,
+      `mi.organization_id = '${organizationId}'::uuid`,
+      `mi.research_id = '${researchId}'::uuid`,
+      `mi.campaign_id = '${campaignId}'::uuid`,
+      `mi.deleted_at IS NULL`,
     ];
 
     if (dateFrom) {
       filters.push(
-        `${resolvedTimestampExpr}::timestamptz >= '${dateFrom}'::timestamptz`,
+        `mi.resolved_at >= '${dateFrom}'::timestamptz`,
       );
     }
     if (dateTo) {
       filters.push(
-        `${resolvedTimestampExpr}::timestamptz <= '${dateTo}'::timestamptz`,
+        `mi.resolved_at <= '${dateTo}'::timestamptz`,
       );
     }
 
     if (userId && userId.length > 0) {
       const escapedUserIds = userId.map((id) => `'${id}'`).join(',');
-      filters.push(`m.user_id::text IN (${escapedUserIds})`);
+      filters.push(`mi.user_id::text IN (${escapedUserIds})`);
     }
 
     const whereClause = `WHERE ${filters.join(' AND ')}`;
@@ -1416,16 +1437,16 @@ export class MeasurementService {
 
     switch (groupBy) {
       case SummaryGrouping.USER:
-        selectGroupExpr = `m.user_id::text`;
+        selectGroupExpr = `mi.user_id::text`;
         break;
       case SummaryGrouping.MONTH:
-        selectGroupExpr = `to_char(date_trunc('month', ${resolvedTimestampExpr}::timestamptz AT TIME ZONE '${tz}'), 'YYYY-MM')`;
+        selectGroupExpr = `to_char(date_trunc('month', mi.resolved_at AT TIME ZONE '${tz}'), 'YYYY-MM')`;
         break;
       case SummaryGrouping.DAY:
-        selectGroupExpr = `to_char(date_trunc('day', ${resolvedTimestampExpr}::timestamptz AT TIME ZONE '${tz}'), 'YYYY-MM-DD')`;
+        selectGroupExpr = `to_char(date_trunc('day', mi.resolved_at AT TIME ZONE '${tz}'), 'YYYY-MM-DD')`;
         break;
       case SummaryGrouping.HOUR:
-        selectGroupExpr = `to_char(date_trunc('hour', ${resolvedTimestampExpr}::timestamptz AT TIME ZONE '${tz}'), 'YYYY-MM-DD HH24:00')`;
+        selectGroupExpr = `to_char(date_trunc('hour', mi.resolved_at AT TIME ZONE '${tz}'), 'YYYY-MM-DD HH24:00')`;
         break;
       default:
         throw new BadRequestException('Agrupación no válida');
@@ -1435,8 +1456,7 @@ export class MeasurementService {
       SELECT 
         ${selectGroupExpr} AS group_key,
         COUNT(*)::int AS total_measurements
-      FROM "measurement" m,
-      LATERAL jsonb_array_elements(m.body) AS elem
+      FROM "measurement_item" mi
       ${whereClause}
       GROUP BY group_key
       ORDER BY group_key ASC;
@@ -1483,27 +1503,26 @@ export class MeasurementService {
     const filterDateFrom = dateFrom ? toStartOfDayIfDateOnly(dateFrom) : null;
     const filterDateTo = dateTo ? toEndOfDayIfDateOnly(dateTo) : null;
 
-    const rawUsers = await this.prisma.$queryRaw<{ user_id: string }[]>`
-      SELECT DISTINCT 
-        m.user_id::text AS user_id
-      FROM measurement m,
-      LATERAL jsonb_array_elements(m.body) AS elem(value)
-      WHERE m.research_id = ${researchId}::uuid
-        AND m.campaign_id = ${campaignId}::uuid
-        AND m.deleted_at IS NULL
-        AND (elem.value->>'deletedAt') IS NULL
-        AND (
-          ${filterDateFrom}::timestamptz IS NULL 
-          OR (elem.value #>> array['meta', 'timestamps', elem.value->'meta'->'timestamps'->>'resolved'])::timestamptz >= ${filterDateFrom}::timestamptz
-        )
-        AND (
-          ${filterDateTo}::timestamptz IS NULL 
-          OR (elem.value #>> array['meta', 'timestamps', elem.value->'meta'->'timestamps'->>'resolved'])::timestamptz <= ${filterDateTo}::timestamptz
-        )
-      ORDER BY user_id ASC
-    `;
+    const where: any = {
+      researchId,
+      campaignId,
+      deletedAt: null,
+    };
 
-    const distinctUserIds = rawUsers.map((r) => r.user_id);
+    if (filterDateFrom || filterDateTo) {
+      where.resolvedAt = {};
+      if (filterDateFrom) where.resolvedAt.gte = filterDateFrom;
+      if (filterDateTo) where.resolvedAt.lte = filterDateTo;
+    }
+
+    const rawUsers = await this.prisma.measurementItem.findMany({
+      where,
+      select: { userId: true },
+      distinct: ['userId'],
+      orderBy: { userId: 'asc' },
+    });
+
+    const distinctUserIds = rawUsers.map((r) => r.userId);
     if (distinctUserIds.length === 0) return [];
 
     const usersById = await this.getUsersMap(distinctUserIds);
@@ -1529,51 +1548,48 @@ export class MeasurementService {
     const rIds = researchIds && researchIds.length > 0 ? researchIds : null;
     const cIds = campaignIds && campaignIds.length > 0 ? campaignIds : null;
 
-    const resolvedTimestampExpr = `(elem.value #>> array['meta', 'timestamps', elem.value->'meta'->'timestamps'->>'resolved'])`;
-
     let selectGroupExpr = '';
     switch (groupBy) {
       case SummaryGrouping.USER:
-        selectGroupExpr = `m.user_id::text`;
+        selectGroupExpr = `mi.user_id::text`;
         break;
       case SummaryGrouping.MONTH:
-        selectGroupExpr = `to_char(date_trunc('month', ${resolvedTimestampExpr}::timestamptz AT TIME ZONE '${tz}'), 'YYYY-MM')`;
+        selectGroupExpr = `to_char(date_trunc('month', mi.resolved_at AT TIME ZONE '${tz}'), 'YYYY-MM')`;
         break;
       case SummaryGrouping.DAY:
-        selectGroupExpr = `to_char(date_trunc('day', ${resolvedTimestampExpr}::timestamptz AT TIME ZONE '${tz}'), 'YYYY-MM-DD')`;
+        selectGroupExpr = `to_char(date_trunc('day', mi.resolved_at AT TIME ZONE '${tz}'), 'YYYY-MM-DD')`;
         break;
       case SummaryGrouping.HOUR:
-        selectGroupExpr = `to_char(date_trunc('hour', ${resolvedTimestampExpr}::timestamptz AT TIME ZONE '${tz}'), 'YYYY-MM-DD HH24:00')`;
+        selectGroupExpr = `to_char(date_trunc('hour', mi.resolved_at AT TIME ZONE '${tz}'), 'YYYY-MM-DD HH24:00')`;
         break;
       default:
         throw new BadRequestException('Agrupación no válida');
     }
 
     const filters: string[] = [
-      `m.organization_id = '${organizationId}'::uuid`,
-      `m.deleted_at IS NULL`,
-      `(elem.value->>'deletedAt') IS NULL`,
+      `mi.organization_id = '${organizationId}'::uuid`,
+      `mi.deleted_at IS NULL`,
     ];
 
     if (rIds) {
       const escapedResearchIds = rIds.map((id) => `'${id}'`).join(',');
-      filters.push(`m.research_id::text IN (${escapedResearchIds})`);
+      filters.push(`mi.research_id::text IN (${escapedResearchIds})`);
     }
 
     if (cIds) {
       const escapedCampaignIds = cIds.map((id) => `'${id}'`).join(',');
-      filters.push(`m.campaign_id::text IN (${escapedCampaignIds})`);
+      filters.push(`mi.campaign_id::text IN (${escapedCampaignIds})`);
     }
 
     if (filterDateFrom) {
       filters.push(
-        `${resolvedTimestampExpr}::timestamptz >= '${filterDateFrom.toISOString()}'::timestamptz`,
+        `mi.resolved_at >= '${filterDateFrom.toISOString()}'::timestamptz`,
       );
     }
 
     if (filterDateTo) {
       filters.push(
-        `${resolvedTimestampExpr}::timestamptz <= '${filterDateTo.toISOString()}'::timestamptz`,
+        `mi.resolved_at <= '${filterDateTo.toISOString()}'::timestamptz`,
       );
     }
 
@@ -1588,15 +1604,14 @@ export class MeasurementService {
       }>
     >(`
       SELECT 
-        m.research_id::text AS research_id,
-        m.campaign_id::text AS campaign_id,
+        mi.research_id::text AS research_id,
+        mi.campaign_id::text AS campaign_id,
         ${selectGroupExpr} AS group_key,
         COUNT(*)::int AS total_measurements
-      FROM "measurement" m,
-      LATERAL jsonb_array_elements(m.body) AS elem
+      FROM "measurement_item" mi
       ${whereClause}
-      GROUP BY m.research_id, m.campaign_id, group_key
-      ORDER BY m.research_id, m.campaign_id, group_key ASC;
+      GROUP BY mi.research_id, mi.campaign_id, group_key
+      ORDER BY mi.research_id, mi.campaign_id, group_key ASC;
     `);
 
     if (groupBy === SummaryGrouping.USER) {
