@@ -348,13 +348,29 @@ export class MeasurementService {
       unknown
     >[];
 
-    const updatedMeasurement = await this.prisma.measurement.update({
-      where: { id: measurementId },
-      data: {
-        header: toJsonInput(finalHeader),
-        body: toJsonInput(finalBody),
+    const itemsToInsert = this.extractMeasurementItems(
+      {
+        ...paramIds,
+        measurementId,
+        userId,
+        measurementCreatedAt: measurement.createdAt,
       },
-    });
+      finalBody,
+    );
+
+    const [updatedMeasurement] = await this.prisma.$transaction([
+      this.prisma.measurement.update({
+        where: { id: measurementId },
+        data: {
+          header: toJsonInput(finalHeader),
+          body: toJsonInput(finalBody),
+        },
+      }),
+      this.prisma.measurementItem.createMany({
+        data: itemsToInsert,
+        skipDuplicates: true,
+      }),
+    ]);
 
     const usersById = await this.getUsersMap([userId]);
     const user = this.toResolvedUser(userId, usersById.get(userId));
@@ -367,10 +383,106 @@ export class MeasurementService {
         totalImagesProcessed: files ? files.length : 0,
         durationMs: Date.now() - started,
       },
-      'Lote masivo guardado sin advertencias de linter.',
+      'Lote masivo guardado con dual-write (Measurement + MeasurementItem).',
     );
 
     return { ...updatedMeasurement, user };
+  }
+
+  private extractMeasurementItems(
+    paramIds: {
+      organizationId: string;
+      researchId: string;
+      campaignId: string;
+      measurementId: string;
+      userId: string;
+      measurementCreatedAt?: Date;
+    },
+    body: Record<string, unknown>[],
+  ) {
+    const itemsToInsert: any[] = [];
+
+    const defaultDate = paramIds.measurementCreatedAt ?? new Date();
+
+    for (const item of body) {
+      if (!item || typeof item !== 'object' || !item.id) {
+        continue;
+      }
+
+      const meta = (item.meta ?? {}) as Record<string, unknown>;
+      const timestamps = (meta.timestamps ?? {}) as Record<
+        string,
+        string | null
+      >;
+      const location = (meta.location ?? {}) as Record<string, unknown>;
+
+      const resolvedKey =
+        typeof timestamps.resolved === 'string'
+          ? timestamps.resolved
+          : 'server';
+      const resolvedIso =
+        timestamps[resolvedKey] ||
+        timestamps.server ||
+        timestamps.device ||
+        timestamps.gps ||
+        timestamps.manual ||
+        item.createdAt;
+
+      let resolvedAt = resolvedIso ? new Date(String(resolvedIso)) : defaultDate;
+      if (isNaN(resolvedAt.getTime())) {
+        resolvedAt = defaultDate;
+      }
+
+      const latitude =
+        typeof location.latitude === 'number'
+          ? location.latitude
+          : !isNaN(Number(location.latitude)) && location.latitude !== null
+          ? Number(location.latitude)
+          : null;
+
+      const longitude =
+        typeof location.longitude === 'number'
+          ? location.longitude
+          : !isNaN(Number(location.longitude)) && location.longitude !== null
+          ? Number(location.longitude)
+          : null;
+
+      let itemCreatedAt = item.createdAt
+        ? new Date(String(item.createdAt))
+        : defaultDate;
+      if (isNaN(itemCreatedAt.getTime())) {
+        itemCreatedAt = defaultDate;
+      }
+
+      let itemDeletedAt: Date | null = null;
+      if (item.deletedAt) {
+        const parsedDeletedAt = new Date(String(item.deletedAt));
+        if (!isNaN(parsedDeletedAt.getTime())) {
+          itemDeletedAt = parsedDeletedAt;
+        }
+      }
+
+      itemsToInsert.push({
+        id: String(item.id),
+        measurementId: paramIds.measurementId,
+        organizationId: paramIds.organizationId,
+        researchId: paramIds.researchId,
+        campaignId: paramIds.campaignId,
+        userId: paramIds.userId,
+        answers: toJsonInput(
+          item.answers && typeof item.answers === 'object'
+            ? (item.answers as Record<string, unknown>)
+            : {},
+        ),
+        latitude,
+        longitude,
+        resolvedAt,
+        deletedAt: itemDeletedAt,
+        createdAt: itemCreatedAt,
+      });
+    }
+
+    return itemsToInsert;
   }
 
   getImageStream(params: {
@@ -603,6 +715,25 @@ export class MeasurementService {
       },
     });
 
+    const itemsToInsert = this.extractMeasurementItems(
+      {
+        organizationId,
+        researchId,
+        campaignId,
+        measurementId: measurement.id,
+        userId,
+        measurementCreatedAt: measurement.createdAt,
+      },
+      initialBody,
+    );
+
+    if (itemsToInsert.length > 0) {
+      await this.prisma.measurementItem.createMany({
+        data: itemsToInsert,
+        skipDuplicates: true,
+      });
+    }
+
     const usersById = await this.getUsersMap([userId]);
     const user = this.toResolvedUser(userId, usersById.get(userId));
     return { ...measurement, user };
@@ -659,31 +790,41 @@ export class MeasurementService {
 
     const activeItems = newBody.filter((item) => !item.deletedAt);
 
-    // If there are no active items left, mark the entire measurement
-    // as logically deleted. The physical deletion can be performed later
-    // by the retention job after deletionReviewAt is reached.
+    // Dual-write: update both Measurement and MeasurementItem
     if (activeItems.length === 0) {
-      const deletedMeasurement = await this.prisma.measurement.update({
-        where: { id: measurementId },
-        data: {
-          body: newBody,
-          deletedAt: now,
-          deletionReviewAt,
-        },
-      });
+      const [deletedMeasurement] = await this.prisma.$transaction([
+        this.prisma.measurement.update({
+          where: { id: measurementId },
+          data: {
+            body: newBody,
+            deletedAt: now,
+            deletionReviewAt,
+          },
+        }),
+        this.prisma.measurementItem.updateMany({
+          where: { id: itemId },
+          data: { deletedAt: now },
+        }),
+      ]);
 
       return { ...deletedMeasurement, user: existing.user };
     }
 
     // The measurement still contains active items, but its deletion
     // review date is reset because a new item was deleted.
-    const updatedMeasurement = await this.prisma.measurement.update({
-      where: { id: measurementId },
-      data: {
-        body: newBody,
-        deletionReviewAt,
-      },
-    });
+    const [updatedMeasurement] = await this.prisma.$transaction([
+      this.prisma.measurement.update({
+        where: { id: measurementId },
+        data: {
+          body: newBody,
+          deletionReviewAt,
+        },
+      }),
+      this.prisma.measurementItem.updateMany({
+        where: { id: itemId },
+        data: { deletedAt: now },
+      }),
+    ]);
 
     return { ...updatedMeasurement, user: existing.user };
   }
