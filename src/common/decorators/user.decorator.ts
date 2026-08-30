@@ -1,6 +1,13 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { Request } from 'express';
 
+export interface IKeycloakUser {
+  id: string;
+  email?: string;
+  username?: string;
+  name?: string;
+}
+
 export const User = createParamDecorator(
   (_: unknown, ctx: ExecutionContext): IKeycloakUser => {
     const request = ctx.switchToHttp().getRequest<Request>();

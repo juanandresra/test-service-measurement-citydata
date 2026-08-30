@@ -25,7 +25,8 @@
     "prisma:migrate-reset:mea": "prisma migrate reset --config=./prisma/measurement/prisma.config.ts",
     "prisma:pull:mea": "prisma db pull --config=./prisma/measurement/prisma.config.ts",
     "prisma:push:mea": "prisma db push --config=./prisma/measurement/prisma.config.ts",
-    "prisma:studio:mea": "prisma studio --config=./prisma/measurement/prisma.config.ts"
+    "prisma:studio:mea": "prisma studio --config=./prisma/measurement/prisma.config.ts",
+    "backfill:items": "node dist/src/scripts/backfill-measurement-items.js"
   },
   "dependencies": {
     "@keyv/redis": "^5.1.6",
