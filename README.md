@@ -85,8 +85,8 @@ DATABASE_URL=postgresql://postgres:your_postgres_password@citydata-postgres-b1my
 # 1. Instalar dependencias
 yarn install
 
-# 2. Sincronizar esquema de base de datos
-npx prisma db push --schema ./prisma/measurement/schema.prisma
+# 2. Aplicar migraciones en base de datos (Producción)
+yarn prisma:deploy:mea
 
 # 3. Iniciar en modo desarrollo con recarga en caliente
 yarn start:dev

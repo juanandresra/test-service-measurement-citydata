@@ -19,7 +19,7 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "prisma": "prisma",
-    "prisma:deploy:mea": "prisma deploy --config=./prisma/measurement/prisma.config.ts",
+    "prisma:deploy:mea": "prisma migrate deploy --config=./prisma/measurement/prisma.config.ts",
     "prisma:generate:mea": "prisma generate --config=./prisma/measurement/prisma.config.ts",
     "prisma:migrate:mea": "prisma migrate dev --config=./prisma/measurement/prisma.config.ts",
     "prisma:migrate-reset:mea": "prisma migrate reset --config=./prisma/measurement/prisma.config.ts",
