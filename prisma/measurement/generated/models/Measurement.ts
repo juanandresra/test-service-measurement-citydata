@@ -14,7 +14,9 @@ import type * as Prisma from "../internal/prismaNamespace.js"
 
 /**
  * Model Measurement
- * 
+ * ======================================================
+ * 1. Measurement (Sesión / Lote de Captura)
+ * ======================================================
  */
 export type MeasurementModel = runtime.Types.Result.DefaultSelection<Prisma.$MeasurementPayload>
 
@@ -191,7 +193,7 @@ export type MeasurementGroupByOutputType = {
   formVersion: string
   userId: string
   header: runtime.JsonValue
-  body: runtime.JsonValue
+  body: runtime.JsonValue | null
   meta: runtime.JsonValue | null
   deletionReviewAt: Date | null
   deletedAt: Date | null
@@ -228,12 +230,13 @@ export type MeasurementWhereInput = {
   formVersion?: Prisma.StringFilter<"Measurement"> | string
   userId?: Prisma.UuidFilter<"Measurement"> | string
   header?: Prisma.JsonFilter<"Measurement">
-  body?: Prisma.JsonFilter<"Measurement">
+  body?: Prisma.JsonNullableFilter<"Measurement">
   meta?: Prisma.JsonNullableFilter<"Measurement">
   deletionReviewAt?: Prisma.DateTimeNullableFilter<"Measurement"> | Date | string | null
   deletedAt?: Prisma.DateTimeNullableFilter<"Measurement"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Measurement"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Measurement"> | Date | string
+  items?: Prisma.MeasurementItemListRelationFilter
 }
 
 export type MeasurementOrderByWithRelationInput = {
@@ -244,12 +247,13 @@ export type MeasurementOrderByWithRelationInput = {
   formVersion?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   header?: Prisma.SortOrder
-  body?: Prisma.SortOrder
+  body?: Prisma.SortOrderInput | Prisma.SortOrder
   meta?: Prisma.SortOrderInput | Prisma.SortOrder
   deletionReviewAt?: Prisma.SortOrderInput | Prisma.SortOrder
   deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  items?: Prisma.MeasurementItemOrderByRelationAggregateInput
 }
 
 export type MeasurementWhereUniqueInput = Prisma.AtLeast<{
@@ -263,12 +267,13 @@ export type MeasurementWhereUniqueInput = Prisma.AtLeast<{
   formVersion?: Prisma.StringFilter<"Measurement"> | string
   userId?: Prisma.UuidFilter<"Measurement"> | string
   header?: Prisma.JsonFilter<"Measurement">
-  body?: Prisma.JsonFilter<"Measurement">
+  body?: Prisma.JsonNullableFilter<"Measurement">
   meta?: Prisma.JsonNullableFilter<"Measurement">
   deletionReviewAt?: Prisma.DateTimeNullableFilter<"Measurement"> | Date | string | null
   deletedAt?: Prisma.DateTimeNullableFilter<"Measurement"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Measurement"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Measurement"> | Date | string
+  items?: Prisma.MeasurementItemListRelationFilter
 }, "id">
 
 export type MeasurementOrderByWithAggregationInput = {
@@ -279,7 +284,7 @@ export type MeasurementOrderByWithAggregationInput = {
   formVersion?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   header?: Prisma.SortOrder
-  body?: Prisma.SortOrder
+  body?: Prisma.SortOrderInput | Prisma.SortOrder
   meta?: Prisma.SortOrderInput | Prisma.SortOrder
   deletionReviewAt?: Prisma.SortOrderInput | Prisma.SortOrder
   deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -301,7 +306,7 @@ export type MeasurementScalarWhereWithAggregatesInput = {
   formVersion?: Prisma.StringWithAggregatesFilter<"Measurement"> | string
   userId?: Prisma.UuidWithAggregatesFilter<"Measurement"> | string
   header?: Prisma.JsonWithAggregatesFilter<"Measurement">
-  body?: Prisma.JsonWithAggregatesFilter<"Measurement">
+  body?: Prisma.JsonNullableWithAggregatesFilter<"Measurement">
   meta?: Prisma.JsonNullableWithAggregatesFilter<"Measurement">
   deletionReviewAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Measurement"> | Date | string | null
   deletedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Measurement"> | Date | string | null
@@ -317,12 +322,13 @@ export type MeasurementCreateInput = {
   formVersion: string
   userId: string
   header: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  body: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  body?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   meta?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletionReviewAt?: Date | string | null
   deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  items?: Prisma.MeasurementItemCreateNestedManyWithoutMeasurementInput
 }
 
 export type MeasurementUncheckedCreateInput = {
@@ -333,12 +339,13 @@ export type MeasurementUncheckedCreateInput = {
   formVersion: string
   userId: string
   header: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  body: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  body?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   meta?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletionReviewAt?: Date | string | null
   deletedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  items?: Prisma.MeasurementItemUncheckedCreateNestedManyWithoutMeasurementInput
 }
 
 export type MeasurementUpdateInput = {
@@ -349,12 +356,13 @@ export type MeasurementUpdateInput = {
   formVersion?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   header?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  body?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  body?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   meta?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletionReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  items?: Prisma.MeasurementItemUpdateManyWithoutMeasurementNestedInput
 }
 
 export type MeasurementUncheckedUpdateInput = {
@@ -365,12 +373,13 @@ export type MeasurementUncheckedUpdateInput = {
   formVersion?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   header?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  body?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  body?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   meta?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletionReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  items?: Prisma.MeasurementItemUncheckedUpdateManyWithoutMeasurementNestedInput
 }
 
 export type MeasurementCreateManyInput = {
@@ -381,7 +390,7 @@ export type MeasurementCreateManyInput = {
   formVersion: string
   userId: string
   header: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  body: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  body?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   meta?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletionReviewAt?: Date | string | null
   deletedAt?: Date | string | null
@@ -397,7 +406,7 @@ export type MeasurementUpdateManyMutationInput = {
   formVersion?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   header?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  body?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  body?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   meta?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletionReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -413,7 +422,7 @@ export type MeasurementUncheckedUpdateManyInput = {
   formVersion?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   header?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  body?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  body?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   meta?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletionReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -463,6 +472,11 @@ export type MeasurementMinOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
 }
 
+export type MeasurementScalarRelationFilter = {
+  is?: Prisma.MeasurementWhereInput
+  isNot?: Prisma.MeasurementWhereInput
+}
+
 export type StringFieldUpdateOperationsInput = {
   set?: string
 }
@@ -475,6 +489,129 @@ export type DateTimeFieldUpdateOperationsInput = {
   set?: Date | string
 }
 
+export type MeasurementCreateNestedOneWithoutItemsInput = {
+  create?: Prisma.XOR<Prisma.MeasurementCreateWithoutItemsInput, Prisma.MeasurementUncheckedCreateWithoutItemsInput>
+  connectOrCreate?: Prisma.MeasurementCreateOrConnectWithoutItemsInput
+  connect?: Prisma.MeasurementWhereUniqueInput
+}
+
+export type MeasurementUpdateOneRequiredWithoutItemsNestedInput = {
+  create?: Prisma.XOR<Prisma.MeasurementCreateWithoutItemsInput, Prisma.MeasurementUncheckedCreateWithoutItemsInput>
+  connectOrCreate?: Prisma.MeasurementCreateOrConnectWithoutItemsInput
+  upsert?: Prisma.MeasurementUpsertWithoutItemsInput
+  connect?: Prisma.MeasurementWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.MeasurementUpdateToOneWithWhereWithoutItemsInput, Prisma.MeasurementUpdateWithoutItemsInput>, Prisma.MeasurementUncheckedUpdateWithoutItemsInput>
+}
+
+export type MeasurementCreateWithoutItemsInput = {
+  id?: string
+  organizationId: string
+  researchId: string
+  campaignId: string
+  formVersion: string
+  userId: string
+  header: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  body?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  meta?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  deletionReviewAt?: Date | string | null
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type MeasurementUncheckedCreateWithoutItemsInput = {
+  id?: string
+  organizationId: string
+  researchId: string
+  campaignId: string
+  formVersion: string
+  userId: string
+  header: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  body?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  meta?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  deletionReviewAt?: Date | string | null
+  deletedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type MeasurementCreateOrConnectWithoutItemsInput = {
+  where: Prisma.MeasurementWhereUniqueInput
+  create: Prisma.XOR<Prisma.MeasurementCreateWithoutItemsInput, Prisma.MeasurementUncheckedCreateWithoutItemsInput>
+}
+
+export type MeasurementUpsertWithoutItemsInput = {
+  update: Prisma.XOR<Prisma.MeasurementUpdateWithoutItemsInput, Prisma.MeasurementUncheckedUpdateWithoutItemsInput>
+  create: Prisma.XOR<Prisma.MeasurementCreateWithoutItemsInput, Prisma.MeasurementUncheckedCreateWithoutItemsInput>
+  where?: Prisma.MeasurementWhereInput
+}
+
+export type MeasurementUpdateToOneWithWhereWithoutItemsInput = {
+  where?: Prisma.MeasurementWhereInput
+  data: Prisma.XOR<Prisma.MeasurementUpdateWithoutItemsInput, Prisma.MeasurementUncheckedUpdateWithoutItemsInput>
+}
+
+export type MeasurementUpdateWithoutItemsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  organizationId?: Prisma.StringFieldUpdateOperationsInput | string
+  researchId?: Prisma.StringFieldUpdateOperationsInput | string
+  campaignId?: Prisma.StringFieldUpdateOperationsInput | string
+  formVersion?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  header?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  body?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  meta?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  deletionReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type MeasurementUncheckedUpdateWithoutItemsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  organizationId?: Prisma.StringFieldUpdateOperationsInput | string
+  researchId?: Prisma.StringFieldUpdateOperationsInput | string
+  campaignId?: Prisma.StringFieldUpdateOperationsInput | string
+  formVersion?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  header?: Prisma.JsonNullValueInput | runtime.InputJsonValue
+  body?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  meta?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  deletionReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+
+/**
+ * Count Type MeasurementCountOutputType
+ */
+
+export type MeasurementCountOutputType = {
+  items: number
+}
+
+export type MeasurementCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  items?: boolean | MeasurementCountOutputTypeCountItemsArgs
+}
+
+/**
+ * MeasurementCountOutputType without action
+ */
+export type MeasurementCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the MeasurementCountOutputType
+   */
+  select?: Prisma.MeasurementCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * MeasurementCountOutputType without action
+ */
+export type MeasurementCountOutputTypeCountItemsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.MeasurementItemWhereInput
+}
 
 
 export type MeasurementSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -491,6 +628,8 @@ export type MeasurementSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   deletedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  items?: boolean | Prisma.Measurement$itemsArgs<ExtArgs>
+  _count?: boolean | Prisma.MeasurementCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["measurement"]>
 
 export type MeasurementSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -542,10 +681,18 @@ export type MeasurementSelectScalar = {
 }
 
 export type MeasurementOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "organizationId" | "researchId" | "campaignId" | "formVersion" | "userId" | "header" | "body" | "meta" | "deletionReviewAt" | "deletedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["measurement"]>
+export type MeasurementInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  items?: boolean | Prisma.Measurement$itemsArgs<ExtArgs>
+  _count?: boolean | Prisma.MeasurementCountOutputTypeDefaultArgs<ExtArgs>
+}
+export type MeasurementIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
+export type MeasurementIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {}
 
 export type $MeasurementPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Measurement"
-  objects: {}
+  objects: {
+    items: Prisma.$MeasurementItemPayload<ExtArgs>[]
+  }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     organizationId: string
@@ -567,19 +714,15 @@ export type $MeasurementPayload<ExtArgs extends runtime.Types.Extensions.Interna
      */
     header: runtime.JsonValue
     /**
-     * Array de registros del body, cada uno con sus answers + meta (gps, timestamps, location)
-     * ej: [{ id, answers, meta: { gpsTimestamp, deviceTimestamp, serverTimestamp, location }, createdAt }]
+     * Array de registros del body original (conservado durante la transición de migración)
      */
-    body: runtime.JsonValue
+    body: runtime.JsonValue | null
     /**
-     * Datos calculados/agregados de la medición completa: total de registros,
-     * bounding box o centroide de las ubicaciones, rango de fechas, etc.
-     * Se calcula en el momento de la subida, no viene directo del cliente.
+     * Datos calculados/agregados de la medición completa: tracks GPS, device, etc.
      */
     meta: runtime.JsonValue | null
     /**
-     * Fecha a partir de la cual la medición debe ser revisada
-     * para determinar si puede ser eliminada.
+     * Fecha a partir de la cual la medición debe ser revisada para eliminación
      */
     deletionReviewAt: Date | null
     deletedAt: Date | null
@@ -979,6 +1122,7 @@ readonly fields: MeasurementFieldRefs;
  */
 export interface Prisma__MeasurementClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  items<T extends Prisma.Measurement$itemsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Measurement$itemsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MeasurementItemPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1038,6 +1182,10 @@ export type MeasurementFindUniqueArgs<ExtArgs extends runtime.Types.Extensions.I
    */
   omit?: Prisma.MeasurementOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MeasurementInclude<ExtArgs> | null
+  /**
    * Filter, which Measurement to fetch.
    */
   where: Prisma.MeasurementWhereUniqueInput
@@ -1056,6 +1204,10 @@ export type MeasurementFindUniqueOrThrowArgs<ExtArgs extends runtime.Types.Exten
    */
   omit?: Prisma.MeasurementOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MeasurementInclude<ExtArgs> | null
+  /**
    * Filter, which Measurement to fetch.
    */
   where: Prisma.MeasurementWhereUniqueInput
@@ -1073,6 +1225,10 @@ export type MeasurementFindFirstArgs<ExtArgs extends runtime.Types.Extensions.In
    * Omit specific fields from the Measurement
    */
   omit?: Prisma.MeasurementOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MeasurementInclude<ExtArgs> | null
   /**
    * Filter, which Measurement to fetch.
    */
@@ -1122,6 +1278,10 @@ export type MeasurementFindFirstOrThrowArgs<ExtArgs extends runtime.Types.Extens
    */
   omit?: Prisma.MeasurementOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MeasurementInclude<ExtArgs> | null
+  /**
    * Filter, which Measurement to fetch.
    */
   where?: Prisma.MeasurementWhereInput
@@ -1169,6 +1329,10 @@ export type MeasurementFindManyArgs<ExtArgs extends runtime.Types.Extensions.Int
    * Omit specific fields from the Measurement
    */
   omit?: Prisma.MeasurementOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MeasurementInclude<ExtArgs> | null
   /**
    * Filter, which Measurements to fetch.
    */
@@ -1218,6 +1382,10 @@ export type MeasurementCreateArgs<ExtArgs extends runtime.Types.Extensions.Inter
    */
   omit?: Prisma.MeasurementOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MeasurementInclude<ExtArgs> | null
+  /**
    * The data needed to create a Measurement.
    */
   data: Prisma.XOR<Prisma.MeasurementCreateInput, Prisma.MeasurementUncheckedCreateInput>
@@ -1265,6 +1433,10 @@ export type MeasurementUpdateArgs<ExtArgs extends runtime.Types.Extensions.Inter
    * Omit specific fields from the Measurement
    */
   omit?: Prisma.MeasurementOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MeasurementInclude<ExtArgs> | null
   /**
    * The data needed to update a Measurement.
    */
@@ -1332,6 +1504,10 @@ export type MeasurementUpsertArgs<ExtArgs extends runtime.Types.Extensions.Inter
    */
   omit?: Prisma.MeasurementOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MeasurementInclude<ExtArgs> | null
+  /**
    * The filter to search for the Measurement to update in case it exists.
    */
   where: Prisma.MeasurementWhereUniqueInput
@@ -1358,6 +1534,10 @@ export type MeasurementDeleteArgs<ExtArgs extends runtime.Types.Extensions.Inter
    */
   omit?: Prisma.MeasurementOmit<ExtArgs> | null
   /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MeasurementInclude<ExtArgs> | null
+  /**
    * Filter which Measurement to delete.
    */
   where: Prisma.MeasurementWhereUniqueInput
@@ -1378,6 +1558,30 @@ export type MeasurementDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.I
 }
 
 /**
+ * Measurement.items
+ */
+export type Measurement$itemsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the MeasurementItem
+   */
+  select?: Prisma.MeasurementItemSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the MeasurementItem
+   */
+  omit?: Prisma.MeasurementItemOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MeasurementItemInclude<ExtArgs> | null
+  where?: Prisma.MeasurementItemWhereInput
+  orderBy?: Prisma.MeasurementItemOrderByWithRelationInput | Prisma.MeasurementItemOrderByWithRelationInput[]
+  cursor?: Prisma.MeasurementItemWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.MeasurementItemScalarFieldEnum | Prisma.MeasurementItemScalarFieldEnum[]
+}
+
+/**
  * Measurement without action
  */
 export type MeasurementDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1389,4 +1593,8 @@ export type MeasurementDefaultArgs<ExtArgs extends runtime.Types.Extensions.Inte
    * Omit specific fields from the Measurement
    */
   omit?: Prisma.MeasurementOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.MeasurementInclude<ExtArgs> | null
 }

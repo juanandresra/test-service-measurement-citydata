@@ -9,46 +9,39 @@ datasource db {
 }
 
 /// ======================================================
-/// Measurement
+/// 1. Measurement (Sesión / Lote de Captura)
 /// ======================================================
-
 model Measurement {
-  id String @id @default(uuid()) @db.Uuid
-
-  organizationId String @map("organization_id") @db.Uuid
+  id             String    @id @default(uuid()) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
 
   /// External reference to Research Service
-  researchId String @map("research_id") @db.Uuid
-
-  campaignId String @map("campaign_id") @db.Uuid
+  researchId     String    @map("research_id") @db.Uuid
+  campaignId     String    @map("campaign_id") @db.Uuid
 
   /// Versión del formulario vigente al momento de la captura
-  formVersion String @map("form_version") @db.VarChar(20)
+  formVersion    String    @map("form_version") @db.VarChar(20)
 
   /// External reference to User Service — el MEASURER que capturó esta medición
-  userId String @map("user_id") @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
 
   /// Respuestas únicas del header, ej: { "header_text_1": "visible" }
-  header Json @db.JsonB
+  header         Json      @db.JsonB
 
-  /// Array de registros del body, cada uno con sus answers + meta (gps, timestamps, location)
-  /// ej: [{ id, answers, meta: { gpsTimestamp, deviceTimestamp, serverTimestamp, location }, createdAt }]
-  body Json @db.JsonB
+  /// Array de registros del body original (conservado durante la transición de migración)
+  body           Json?     @db.JsonB
 
-  /// Datos calculados/agregados de la medición completa: total de registros,
-  /// bounding box o centroide de las ubicaciones, rango de fechas, etc.
-  /// Se calcula en el momento de la subida, no viene directo del cliente.
-  meta Json? @db.JsonB
+  /// Datos calculados/agregados de la medición completa: tracks GPS, device, etc.
+  meta           Json?     @db.JsonB
 
-  /// Fecha a partir de la cual la medición debe ser revisada
-  /// para determinar si puede ser eliminada.
+  /// Fecha a partir de la cual la medición debe ser revisada para eliminación
   deletionReviewAt DateTime? @map("deletion_review_at")
 
-  deletedAt DateTime? @map("deleted_at")
+  deletedAt      DateTime? @map("deleted_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
 
-  createdAt DateTime @default(now()) @map("created_at")
-
-  updatedAt DateTime @updatedAt @map("updated_at")
+  items          MeasurementItem[]
 
   @@index([organizationId])
   @@index([researchId])
@@ -57,4 +50,39 @@ model Measurement {
   @@index([organizationId, campaignId, deletedAt])
   @@index([campaignId, userId])
   @@map("measurement")
+}
+
+/// ======================================================
+/// 2. MeasurementItem (Registro Individual Normalizado)
+/// ======================================================
+model MeasurementItem {
+  id             String    @id @db.VarChar(64)
+  measurementId  String    @map("measurement_id") @db.Uuid
+  measurement    Measurement @relation(fields: [measurementId], references: [id], onDelete: Cascade)
+
+  /// Columnas denormalizadas para evitar JOINs costosos en consultas masivas
+  organizationId String    @map("organization_id") @db.Uuid
+  researchId     String    @map("research_id") @db.Uuid
+  campaignId     String    @map("campaign_id") @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+
+  /// Respuestas dinámicas del formulario de este registro
+  answers        Json      @db.JsonB
+
+  /// Coordenadas de captura del punto
+  latitude       Float?
+  longitude      Float?
+
+  /// Timestamp fidedigno resuelto (columna TIMESTAMP real indexada)
+  resolvedAt     DateTime  @map("resolved_at")
+
+  deletedAt      DateTime? @map("deleted_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  @@index([measurementId])
+  @@index([organizationId, campaignId, resolvedAt])
+  @@index([campaignId, userId, resolvedAt])
+  @@index([organizationId, resolvedAt])
+  @@index([resolvedAt])
+  @@map("measurement_item")
 }

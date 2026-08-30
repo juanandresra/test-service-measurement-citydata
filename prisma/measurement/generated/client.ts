@@ -41,6 +41,15 @@ export { Prisma }
 
 /**
  * Model Measurement
- * 
+ * ======================================================
+ * 1. Measurement (Sesión / Lote de Captura)
+ * ======================================================
  */
 export type Measurement = Prisma.MeasurementModel
+/**
+ * Model MeasurementItem
+ * ======================================================
+ * 2. MeasurementItem (Registro Individual Normalizado)
+ * ======================================================
+ */
+export type MeasurementItem = Prisma.MeasurementItemModel

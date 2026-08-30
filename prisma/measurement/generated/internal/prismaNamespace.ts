@@ -384,7 +384,8 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 
 export const ModelName = {
-  Measurement: 'Measurement'
+  Measurement: 'Measurement',
+  MeasurementItem: 'MeasurementItem'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -400,7 +401,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "measurement"
+    modelProps: "measurement" | "measurementItem"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -478,6 +479,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    MeasurementItem: {
+      payload: Prisma.$MeasurementItemPayload<ExtArgs>
+      fields: Prisma.MeasurementItemFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.MeasurementItemFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MeasurementItemPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.MeasurementItemFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MeasurementItemPayload>
+        }
+        findFirst: {
+          args: Prisma.MeasurementItemFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MeasurementItemPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.MeasurementItemFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MeasurementItemPayload>
+        }
+        findMany: {
+          args: Prisma.MeasurementItemFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MeasurementItemPayload>[]
+        }
+        create: {
+          args: Prisma.MeasurementItemCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MeasurementItemPayload>
+        }
+        createMany: {
+          args: Prisma.MeasurementItemCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.MeasurementItemCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MeasurementItemPayload>[]
+        }
+        delete: {
+          args: Prisma.MeasurementItemDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MeasurementItemPayload>
+        }
+        update: {
+          args: Prisma.MeasurementItemUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MeasurementItemPayload>
+        }
+        deleteMany: {
+          args: Prisma.MeasurementItemDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.MeasurementItemUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.MeasurementItemUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MeasurementItemPayload>[]
+        }
+        upsert: {
+          args: Prisma.MeasurementItemUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$MeasurementItemPayload>
+        }
+        aggregate: {
+          args: Prisma.MeasurementItemAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateMeasurementItem>
+        }
+        groupBy: {
+          args: Prisma.MeasurementItemGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MeasurementItemGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.MeasurementItemCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.MeasurementItemCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -534,6 +609,24 @@ export const MeasurementScalarFieldEnum = {
 } as const
 
 export type MeasurementScalarFieldEnum = (typeof MeasurementScalarFieldEnum)[keyof typeof MeasurementScalarFieldEnum]
+
+
+export const MeasurementItemScalarFieldEnum = {
+  id: 'id',
+  measurementId: 'measurementId',
+  organizationId: 'organizationId',
+  researchId: 'researchId',
+  campaignId: 'campaignId',
+  userId: 'userId',
+  answers: 'answers',
+  latitude: 'latitude',
+  longitude: 'longitude',
+  resolvedAt: 'resolvedAt',
+  deletedAt: 'deletedAt',
+  createdAt: 'createdAt'
+} as const
+
+export type MeasurementItemScalarFieldEnum = (typeof MeasurementItemScalarFieldEnum)[keyof typeof MeasurementItemScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -629,6 +722,20 @@ export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel
  * Reference to a field of type 'DateTime[]'
  */
 export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Float'
+ */
+export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float'>
+    
+
+
+/**
+ * Reference to a field of type 'Float[]'
+ */
+export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
     
 
 
@@ -756,6 +863,7 @@ export type PrismaClientOptions = ({
 }
 export type GlobalOmitConfig = {
   measurement?: Prisma.MeasurementOmit
+  measurementItem?: Prisma.MeasurementItemOmit
 }
 
 /* Types for Logging */
