@@ -271,7 +271,6 @@ export class MeasurementService {
         userId,
         formVersion: dto.formVersion,
         header: toJsonInput(initialHeader),
-        body: toJsonInput(initialBody),
         meta: toJsonInput(initialMeta),
       },
     });
@@ -363,7 +362,6 @@ export class MeasurementService {
         where: { id: measurementId },
         data: {
           header: toJsonInput(finalHeader),
-          body: toJsonInput(finalBody),
         },
       }),
       this.prisma.measurementItem.createMany({
@@ -684,6 +682,12 @@ export class MeasurementService {
   }) {
     const measurement = await this.prisma.measurement.findFirst({
       where: { id, organizationId, researchId, campaignId, deletedAt: null },
+      include: {
+        items: {
+          where: { deletedAt: null },
+          orderBy: { resolvedAt: 'asc' },
+        },
+      },
     });
     if (!measurement) {
       this.logger.warn(
@@ -693,16 +697,13 @@ export class MeasurementService {
       throw new NotFoundException(`Measurement ${id} not found`);
     }
 
-    const bodyArray = (measurement.body as any[]) || [];
-    const activeBody = bodyArray.filter((item) => !item.deletedAt);
-
     const usersById = await this.getUsersMap([measurement.userId]);
     const user = this.toResolvedUser(
       measurement.userId,
       usersById.get(measurement.userId),
     );
 
-    return { ...measurement, body: activeBody, user };
+    return { ...measurement, user };
   }
 
   async create(
@@ -725,7 +726,6 @@ export class MeasurementService {
         userId,
         formVersion: dto.formVersion,
         header: toJsonInput(initialHeader),
-        body: toJsonInput(initialBody),
       },
     });
 
@@ -773,11 +773,13 @@ export class MeasurementService {
       id: measurementId,
     });
 
+    const targetItem = existing.items?.find((item) => item.id === itemId);
+    if (!targetItem) {
+      throw new NotFoundException('Measurement item not found');
+    }
+
     const now = new Date();
 
-    // Each deletion resets the retention period for the measurement.
-    // This allows the deletion review to happen only after the configured
-    // retention period has elapsed since the last deleted item.
     const retentionDays =
       this.configService.get('MEASUREMENT_DELETION_RETENTION_DAYS', {
         infer: true,
@@ -786,59 +788,38 @@ export class MeasurementService {
     const deletionReviewAt = new Date(now);
     deletionReviewAt.setDate(deletionReviewAt.getDate() + retentionDays);
 
-    const body = existing.body || [];
+    // Soft-delete the item directly on measurementItem
+    await this.prisma.measurementItem.update({
+      where: { id: itemId },
+      data: { deletedAt: now },
+    });
 
-    const targetItem = body.find((item) => item.id === itemId);
+    // Check if there are any remaining active items
+    const remainingActiveCount = await this.prisma.measurementItem.count({
+      where: {
+        measurementId,
+        deletedAt: null,
+      },
+    });
 
-    if (!targetItem) {
-      throw new NotFoundException('Measurement item not found');
-    }
-
-    // Soft-delete the item by setting its deletion timestamp.
-    // If the item was already deleted, preserve its original timestamp.
-    const newBody = body.map((item) =>
-      item.id === itemId
-        ? { ...item, deletedAt: item.deletedAt ?? now.toISOString() }
-        : item,
-    );
-
-    const activeItems = newBody.filter((item) => !item.deletedAt);
-
-    // Dual-write: update both Measurement and MeasurementItem
-    if (activeItems.length === 0) {
-      const [deletedMeasurement] = await this.prisma.$transaction([
-        this.prisma.measurement.update({
-          where: { id: measurementId },
-          data: {
-            body: newBody,
-            deletedAt: now,
-            deletionReviewAt,
-          },
-        }),
-        this.prisma.measurementItem.updateMany({
-          where: { id: itemId },
-          data: { deletedAt: now },
-        }),
-      ]);
+    if (remainingActiveCount === 0) {
+      const deletedMeasurement = await this.prisma.measurement.update({
+        where: { id: measurementId },
+        data: {
+          deletedAt: now,
+          deletionReviewAt,
+        },
+      });
 
       return { ...deletedMeasurement, user: existing.user };
     }
 
-    // The measurement still contains active items, but its deletion
-    // review date is reset because a new item was deleted.
-    const [updatedMeasurement] = await this.prisma.$transaction([
-      this.prisma.measurement.update({
-        where: { id: measurementId },
-        data: {
-          body: newBody,
-          deletionReviewAt,
-        },
-      }),
-      this.prisma.measurementItem.updateMany({
-        where: { id: itemId },
-        data: { deletedAt: now },
-      }),
-    ]);
+    const updatedMeasurement = await this.prisma.measurement.update({
+      where: { id: measurementId },
+      data: {
+        deletionReviewAt,
+      },
+    });
 
     return { ...updatedMeasurement, user: existing.user };
   }

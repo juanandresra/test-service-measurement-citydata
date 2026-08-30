@@ -600,7 +600,6 @@ export const MeasurementScalarFieldEnum = {
   formVersion: 'formVersion',
   userId: 'userId',
   header: 'header',
-  body: 'body',
   meta: 'meta',
   deletionReviewAt: 'deletionReviewAt',
   deletedAt: 'deletedAt',

@@ -28,9 +28,6 @@ model Measurement {
   /// Respuestas únicas del header, ej: { "header_text_1": "visible" }
   header         Json      @db.JsonB
 
-  /// Array de registros del body original (conservado durante la transición de migración)
-  body           Json?     @db.JsonB
-
   /// Datos calculados/agregados de la medición completa: tracks GPS, device, etc.
   meta           Json?     @db.JsonB
 

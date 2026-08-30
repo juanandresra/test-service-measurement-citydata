@@ -60,7 +60,6 @@ export type MeasurementCountAggregateOutputType = {
   formVersion: number
   userId: number
   header: number
-  body: number
   meta: number
   deletionReviewAt: number
   deletedAt: number
@@ -104,7 +103,6 @@ export type MeasurementCountAggregateInputType = {
   formVersion?: true
   userId?: true
   header?: true
-  body?: true
   meta?: true
   deletionReviewAt?: true
   deletedAt?: true
@@ -193,7 +191,6 @@ export type MeasurementGroupByOutputType = {
   formVersion: string
   userId: string
   header: runtime.JsonValue
-  body: runtime.JsonValue | null
   meta: runtime.JsonValue | null
   deletionReviewAt: Date | null
   deletedAt: Date | null
@@ -230,7 +227,6 @@ export type MeasurementWhereInput = {
   formVersion?: Prisma.StringFilter<"Measurement"> | string
   userId?: Prisma.UuidFilter<"Measurement"> | string
   header?: Prisma.JsonFilter<"Measurement">
-  body?: Prisma.JsonNullableFilter<"Measurement">
   meta?: Prisma.JsonNullableFilter<"Measurement">
   deletionReviewAt?: Prisma.DateTimeNullableFilter<"Measurement"> | Date | string | null
   deletedAt?: Prisma.DateTimeNullableFilter<"Measurement"> | Date | string | null
@@ -247,7 +243,6 @@ export type MeasurementOrderByWithRelationInput = {
   formVersion?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   header?: Prisma.SortOrder
-  body?: Prisma.SortOrderInput | Prisma.SortOrder
   meta?: Prisma.SortOrderInput | Prisma.SortOrder
   deletionReviewAt?: Prisma.SortOrderInput | Prisma.SortOrder
   deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -267,7 +262,6 @@ export type MeasurementWhereUniqueInput = Prisma.AtLeast<{
   formVersion?: Prisma.StringFilter<"Measurement"> | string
   userId?: Prisma.UuidFilter<"Measurement"> | string
   header?: Prisma.JsonFilter<"Measurement">
-  body?: Prisma.JsonNullableFilter<"Measurement">
   meta?: Prisma.JsonNullableFilter<"Measurement">
   deletionReviewAt?: Prisma.DateTimeNullableFilter<"Measurement"> | Date | string | null
   deletedAt?: Prisma.DateTimeNullableFilter<"Measurement"> | Date | string | null
@@ -284,7 +278,6 @@ export type MeasurementOrderByWithAggregationInput = {
   formVersion?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   header?: Prisma.SortOrder
-  body?: Prisma.SortOrderInput | Prisma.SortOrder
   meta?: Prisma.SortOrderInput | Prisma.SortOrder
   deletionReviewAt?: Prisma.SortOrderInput | Prisma.SortOrder
   deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -306,7 +299,6 @@ export type MeasurementScalarWhereWithAggregatesInput = {
   formVersion?: Prisma.StringWithAggregatesFilter<"Measurement"> | string
   userId?: Prisma.UuidWithAggregatesFilter<"Measurement"> | string
   header?: Prisma.JsonWithAggregatesFilter<"Measurement">
-  body?: Prisma.JsonNullableWithAggregatesFilter<"Measurement">
   meta?: Prisma.JsonNullableWithAggregatesFilter<"Measurement">
   deletionReviewAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Measurement"> | Date | string | null
   deletedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Measurement"> | Date | string | null
@@ -322,7 +314,6 @@ export type MeasurementCreateInput = {
   formVersion: string
   userId: string
   header: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  body?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   meta?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletionReviewAt?: Date | string | null
   deletedAt?: Date | string | null
@@ -339,7 +330,6 @@ export type MeasurementUncheckedCreateInput = {
   formVersion: string
   userId: string
   header: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  body?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   meta?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletionReviewAt?: Date | string | null
   deletedAt?: Date | string | null
@@ -356,7 +346,6 @@ export type MeasurementUpdateInput = {
   formVersion?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   header?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  body?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   meta?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletionReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -373,7 +362,6 @@ export type MeasurementUncheckedUpdateInput = {
   formVersion?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   header?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  body?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   meta?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletionReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -390,7 +378,6 @@ export type MeasurementCreateManyInput = {
   formVersion: string
   userId: string
   header: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  body?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   meta?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletionReviewAt?: Date | string | null
   deletedAt?: Date | string | null
@@ -406,7 +393,6 @@ export type MeasurementUpdateManyMutationInput = {
   formVersion?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   header?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  body?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   meta?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletionReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -422,7 +408,6 @@ export type MeasurementUncheckedUpdateManyInput = {
   formVersion?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   header?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  body?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   meta?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletionReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -438,7 +423,6 @@ export type MeasurementCountOrderByAggregateInput = {
   formVersion?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   header?: Prisma.SortOrder
-  body?: Prisma.SortOrder
   meta?: Prisma.SortOrder
   deletionReviewAt?: Prisma.SortOrder
   deletedAt?: Prisma.SortOrder
@@ -511,7 +495,6 @@ export type MeasurementCreateWithoutItemsInput = {
   formVersion: string
   userId: string
   header: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  body?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   meta?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletionReviewAt?: Date | string | null
   deletedAt?: Date | string | null
@@ -527,7 +510,6 @@ export type MeasurementUncheckedCreateWithoutItemsInput = {
   formVersion: string
   userId: string
   header: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  body?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   meta?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletionReviewAt?: Date | string | null
   deletedAt?: Date | string | null
@@ -559,7 +541,6 @@ export type MeasurementUpdateWithoutItemsInput = {
   formVersion?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   header?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  body?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   meta?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletionReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -575,7 +556,6 @@ export type MeasurementUncheckedUpdateWithoutItemsInput = {
   formVersion?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   header?: Prisma.JsonNullValueInput | runtime.InputJsonValue
-  body?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   meta?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletionReviewAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -622,7 +602,6 @@ export type MeasurementSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   formVersion?: boolean
   userId?: boolean
   header?: boolean
-  body?: boolean
   meta?: boolean
   deletionReviewAt?: boolean
   deletedAt?: boolean
@@ -640,7 +619,6 @@ export type MeasurementSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   formVersion?: boolean
   userId?: boolean
   header?: boolean
-  body?: boolean
   meta?: boolean
   deletionReviewAt?: boolean
   deletedAt?: boolean
@@ -656,7 +634,6 @@ export type MeasurementSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   formVersion?: boolean
   userId?: boolean
   header?: boolean
-  body?: boolean
   meta?: boolean
   deletionReviewAt?: boolean
   deletedAt?: boolean
@@ -672,7 +649,6 @@ export type MeasurementSelectScalar = {
   formVersion?: boolean
   userId?: boolean
   header?: boolean
-  body?: boolean
   meta?: boolean
   deletionReviewAt?: boolean
   deletedAt?: boolean
@@ -680,7 +656,7 @@ export type MeasurementSelectScalar = {
   updatedAt?: boolean
 }
 
-export type MeasurementOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "organizationId" | "researchId" | "campaignId" | "formVersion" | "userId" | "header" | "body" | "meta" | "deletionReviewAt" | "deletedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["measurement"]>
+export type MeasurementOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "organizationId" | "researchId" | "campaignId" | "formVersion" | "userId" | "header" | "meta" | "deletionReviewAt" | "deletedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["measurement"]>
 export type MeasurementInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   items?: boolean | Prisma.Measurement$itemsArgs<ExtArgs>
   _count?: boolean | Prisma.MeasurementCountOutputTypeDefaultArgs<ExtArgs>
@@ -713,10 +689,6 @@ export type $MeasurementPayload<ExtArgs extends runtime.Types.Extensions.Interna
      * Respuestas únicas del header, ej: { "header_text_1": "visible" }
      */
     header: runtime.JsonValue
-    /**
-     * Array de registros del body original (conservado durante la transición de migración)
-     */
-    body: runtime.JsonValue | null
     /**
      * Datos calculados/agregados de la medición completa: tracks GPS, device, etc.
      */
@@ -1159,7 +1131,6 @@ export interface MeasurementFieldRefs {
   readonly formVersion: Prisma.FieldRef<"Measurement", 'String'>
   readonly userId: Prisma.FieldRef<"Measurement", 'String'>
   readonly header: Prisma.FieldRef<"Measurement", 'Json'>
-  readonly body: Prisma.FieldRef<"Measurement", 'Json'>
   readonly meta: Prisma.FieldRef<"Measurement", 'Json'>
   readonly deletionReviewAt: Prisma.FieldRef<"Measurement", 'DateTime'>
   readonly deletedAt: Prisma.FieldRef<"Measurement", 'DateTime'>
