@@ -477,6 +477,9 @@ export class MeasurementService {
         latitude,
         longitude,
         resolvedAt,
+        resolvedSource: resolvedKey,
+        metaLocation: toJsonInput(location && Object.keys(location).length > 0 ? location : null),
+        metaTimestamps: toJsonInput(timestamps && Object.keys(timestamps).length > 0 ? timestamps : null),
         deletedAt: itemDeletedAt,
         createdAt: itemCreatedAt,
       });

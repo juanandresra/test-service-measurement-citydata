@@ -48,6 +48,7 @@ export type MeasurementItemMinAggregateOutputType = {
   latitude: number | null
   longitude: number | null
   resolvedAt: Date | null
+  resolvedSource: string | null
   deletedAt: Date | null
   createdAt: Date | null
 }
@@ -62,6 +63,7 @@ export type MeasurementItemMaxAggregateOutputType = {
   latitude: number | null
   longitude: number | null
   resolvedAt: Date | null
+  resolvedSource: string | null
   deletedAt: Date | null
   createdAt: Date | null
 }
@@ -77,6 +79,9 @@ export type MeasurementItemCountAggregateOutputType = {
   latitude: number
   longitude: number
   resolvedAt: number
+  resolvedSource: number
+  metaLocation: number
+  metaTimestamps: number
   deletedAt: number
   createdAt: number
   _all: number
@@ -103,6 +108,7 @@ export type MeasurementItemMinAggregateInputType = {
   latitude?: true
   longitude?: true
   resolvedAt?: true
+  resolvedSource?: true
   deletedAt?: true
   createdAt?: true
 }
@@ -117,6 +123,7 @@ export type MeasurementItemMaxAggregateInputType = {
   latitude?: true
   longitude?: true
   resolvedAt?: true
+  resolvedSource?: true
   deletedAt?: true
   createdAt?: true
 }
@@ -132,6 +139,9 @@ export type MeasurementItemCountAggregateInputType = {
   latitude?: true
   longitude?: true
   resolvedAt?: true
+  resolvedSource?: true
+  metaLocation?: true
+  metaTimestamps?: true
   deletedAt?: true
   createdAt?: true
   _all?: true
@@ -234,6 +244,9 @@ export type MeasurementItemGroupByOutputType = {
   latitude: number | null
   longitude: number | null
   resolvedAt: Date
+  resolvedSource: string
+  metaLocation: runtime.JsonValue | null
+  metaTimestamps: runtime.JsonValue | null
   deletedAt: Date | null
   createdAt: Date
   _count: MeasurementItemCountAggregateOutputType | null
@@ -272,6 +285,9 @@ export type MeasurementItemWhereInput = {
   latitude?: Prisma.FloatNullableFilter<"MeasurementItem"> | number | null
   longitude?: Prisma.FloatNullableFilter<"MeasurementItem"> | number | null
   resolvedAt?: Prisma.DateTimeFilter<"MeasurementItem"> | Date | string
+  resolvedSource?: Prisma.StringFilter<"MeasurementItem"> | string
+  metaLocation?: Prisma.JsonNullableFilter<"MeasurementItem">
+  metaTimestamps?: Prisma.JsonNullableFilter<"MeasurementItem">
   deletedAt?: Prisma.DateTimeNullableFilter<"MeasurementItem"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"MeasurementItem"> | Date | string
   measurement?: Prisma.XOR<Prisma.MeasurementScalarRelationFilter, Prisma.MeasurementWhereInput>
@@ -288,6 +304,9 @@ export type MeasurementItemOrderByWithRelationInput = {
   latitude?: Prisma.SortOrderInput | Prisma.SortOrder
   longitude?: Prisma.SortOrderInput | Prisma.SortOrder
   resolvedAt?: Prisma.SortOrder
+  resolvedSource?: Prisma.SortOrder
+  metaLocation?: Prisma.SortOrderInput | Prisma.SortOrder
+  metaTimestamps?: Prisma.SortOrderInput | Prisma.SortOrder
   deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   measurement?: Prisma.MeasurementOrderByWithRelationInput
@@ -307,6 +326,9 @@ export type MeasurementItemWhereUniqueInput = Prisma.AtLeast<{
   latitude?: Prisma.FloatNullableFilter<"MeasurementItem"> | number | null
   longitude?: Prisma.FloatNullableFilter<"MeasurementItem"> | number | null
   resolvedAt?: Prisma.DateTimeFilter<"MeasurementItem"> | Date | string
+  resolvedSource?: Prisma.StringFilter<"MeasurementItem"> | string
+  metaLocation?: Prisma.JsonNullableFilter<"MeasurementItem">
+  metaTimestamps?: Prisma.JsonNullableFilter<"MeasurementItem">
   deletedAt?: Prisma.DateTimeNullableFilter<"MeasurementItem"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"MeasurementItem"> | Date | string
   measurement?: Prisma.XOR<Prisma.MeasurementScalarRelationFilter, Prisma.MeasurementWhereInput>
@@ -323,6 +345,9 @@ export type MeasurementItemOrderByWithAggregationInput = {
   latitude?: Prisma.SortOrderInput | Prisma.SortOrder
   longitude?: Prisma.SortOrderInput | Prisma.SortOrder
   resolvedAt?: Prisma.SortOrder
+  resolvedSource?: Prisma.SortOrder
+  metaLocation?: Prisma.SortOrderInput | Prisma.SortOrder
+  metaTimestamps?: Prisma.SortOrderInput | Prisma.SortOrder
   deletedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.MeasurementItemCountOrderByAggregateInput
@@ -346,6 +371,9 @@ export type MeasurementItemScalarWhereWithAggregatesInput = {
   latitude?: Prisma.FloatNullableWithAggregatesFilter<"MeasurementItem"> | number | null
   longitude?: Prisma.FloatNullableWithAggregatesFilter<"MeasurementItem"> | number | null
   resolvedAt?: Prisma.DateTimeWithAggregatesFilter<"MeasurementItem"> | Date | string
+  resolvedSource?: Prisma.StringWithAggregatesFilter<"MeasurementItem"> | string
+  metaLocation?: Prisma.JsonNullableWithAggregatesFilter<"MeasurementItem">
+  metaTimestamps?: Prisma.JsonNullableWithAggregatesFilter<"MeasurementItem">
   deletedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"MeasurementItem"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"MeasurementItem"> | Date | string
 }
@@ -360,6 +388,9 @@ export type MeasurementItemCreateInput = {
   latitude?: number | null
   longitude?: number | null
   resolvedAt: Date | string
+  resolvedSource?: string
+  metaLocation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  metaTimestamps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletedAt?: Date | string | null
   createdAt?: Date | string
   measurement: Prisma.MeasurementCreateNestedOneWithoutItemsInput
@@ -376,6 +407,9 @@ export type MeasurementItemUncheckedCreateInput = {
   latitude?: number | null
   longitude?: number | null
   resolvedAt: Date | string
+  resolvedSource?: string
+  metaLocation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  metaTimestamps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletedAt?: Date | string | null
   createdAt?: Date | string
 }
@@ -390,6 +424,9 @@ export type MeasurementItemUpdateInput = {
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   resolvedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resolvedSource?: Prisma.StringFieldUpdateOperationsInput | string
+  metaLocation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  metaTimestamps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   measurement?: Prisma.MeasurementUpdateOneRequiredWithoutItemsNestedInput
@@ -406,6 +443,9 @@ export type MeasurementItemUncheckedUpdateInput = {
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   resolvedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resolvedSource?: Prisma.StringFieldUpdateOperationsInput | string
+  metaLocation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  metaTimestamps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -421,6 +461,9 @@ export type MeasurementItemCreateManyInput = {
   latitude?: number | null
   longitude?: number | null
   resolvedAt: Date | string
+  resolvedSource?: string
+  metaLocation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  metaTimestamps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletedAt?: Date | string | null
   createdAt?: Date | string
 }
@@ -435,6 +478,9 @@ export type MeasurementItemUpdateManyMutationInput = {
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   resolvedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resolvedSource?: Prisma.StringFieldUpdateOperationsInput | string
+  metaLocation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  metaTimestamps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -450,6 +496,9 @@ export type MeasurementItemUncheckedUpdateManyInput = {
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   resolvedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resolvedSource?: Prisma.StringFieldUpdateOperationsInput | string
+  metaLocation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  metaTimestamps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -475,6 +524,9 @@ export type MeasurementItemCountOrderByAggregateInput = {
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
   resolvedAt?: Prisma.SortOrder
+  resolvedSource?: Prisma.SortOrder
+  metaLocation?: Prisma.SortOrder
+  metaTimestamps?: Prisma.SortOrder
   deletedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
@@ -494,6 +546,7 @@ export type MeasurementItemMaxOrderByAggregateInput = {
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
   resolvedAt?: Prisma.SortOrder
+  resolvedSource?: Prisma.SortOrder
   deletedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
@@ -508,6 +561,7 @@ export type MeasurementItemMinOrderByAggregateInput = {
   latitude?: Prisma.SortOrder
   longitude?: Prisma.SortOrder
   resolvedAt?: Prisma.SortOrder
+  resolvedSource?: Prisma.SortOrder
   deletedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
@@ -577,6 +631,9 @@ export type MeasurementItemCreateWithoutMeasurementInput = {
   latitude?: number | null
   longitude?: number | null
   resolvedAt: Date | string
+  resolvedSource?: string
+  metaLocation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  metaTimestamps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletedAt?: Date | string | null
   createdAt?: Date | string
 }
@@ -591,6 +648,9 @@ export type MeasurementItemUncheckedCreateWithoutMeasurementInput = {
   latitude?: number | null
   longitude?: number | null
   resolvedAt: Date | string
+  resolvedSource?: string
+  metaLocation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  metaTimestamps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletedAt?: Date | string | null
   createdAt?: Date | string
 }
@@ -635,6 +695,9 @@ export type MeasurementItemScalarWhereInput = {
   latitude?: Prisma.FloatNullableFilter<"MeasurementItem"> | number | null
   longitude?: Prisma.FloatNullableFilter<"MeasurementItem"> | number | null
   resolvedAt?: Prisma.DateTimeFilter<"MeasurementItem"> | Date | string
+  resolvedSource?: Prisma.StringFilter<"MeasurementItem"> | string
+  metaLocation?: Prisma.JsonNullableFilter<"MeasurementItem">
+  metaTimestamps?: Prisma.JsonNullableFilter<"MeasurementItem">
   deletedAt?: Prisma.DateTimeNullableFilter<"MeasurementItem"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"MeasurementItem"> | Date | string
 }
@@ -649,6 +712,9 @@ export type MeasurementItemCreateManyMeasurementInput = {
   latitude?: number | null
   longitude?: number | null
   resolvedAt: Date | string
+  resolvedSource?: string
+  metaLocation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  metaTimestamps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletedAt?: Date | string | null
   createdAt?: Date | string
 }
@@ -663,6 +729,9 @@ export type MeasurementItemUpdateWithoutMeasurementInput = {
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   resolvedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resolvedSource?: Prisma.StringFieldUpdateOperationsInput | string
+  metaLocation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  metaTimestamps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -677,6 +746,9 @@ export type MeasurementItemUncheckedUpdateWithoutMeasurementInput = {
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   resolvedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resolvedSource?: Prisma.StringFieldUpdateOperationsInput | string
+  metaLocation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  metaTimestamps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -691,6 +763,9 @@ export type MeasurementItemUncheckedUpdateManyWithoutMeasurementInput = {
   latitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   longitude?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   resolvedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  resolvedSource?: Prisma.StringFieldUpdateOperationsInput | string
+  metaLocation?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
+  metaTimestamps?: Prisma.NullableJsonNullValueInput | runtime.InputJsonValue
   deletedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -708,6 +783,9 @@ export type MeasurementItemSelect<ExtArgs extends runtime.Types.Extensions.Inter
   latitude?: boolean
   longitude?: boolean
   resolvedAt?: boolean
+  resolvedSource?: boolean
+  metaLocation?: boolean
+  metaTimestamps?: boolean
   deletedAt?: boolean
   createdAt?: boolean
   measurement?: boolean | Prisma.MeasurementDefaultArgs<ExtArgs>
@@ -724,6 +802,9 @@ export type MeasurementItemSelectCreateManyAndReturn<ExtArgs extends runtime.Typ
   latitude?: boolean
   longitude?: boolean
   resolvedAt?: boolean
+  resolvedSource?: boolean
+  metaLocation?: boolean
+  metaTimestamps?: boolean
   deletedAt?: boolean
   createdAt?: boolean
   measurement?: boolean | Prisma.MeasurementDefaultArgs<ExtArgs>
@@ -740,6 +821,9 @@ export type MeasurementItemSelectUpdateManyAndReturn<ExtArgs extends runtime.Typ
   latitude?: boolean
   longitude?: boolean
   resolvedAt?: boolean
+  resolvedSource?: boolean
+  metaLocation?: boolean
+  metaTimestamps?: boolean
   deletedAt?: boolean
   createdAt?: boolean
   measurement?: boolean | Prisma.MeasurementDefaultArgs<ExtArgs>
@@ -756,11 +840,14 @@ export type MeasurementItemSelectScalar = {
   latitude?: boolean
   longitude?: boolean
   resolvedAt?: boolean
+  resolvedSource?: boolean
+  metaLocation?: boolean
+  metaTimestamps?: boolean
   deletedAt?: boolean
   createdAt?: boolean
 }
 
-export type MeasurementItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "measurementId" | "organizationId" | "researchId" | "campaignId" | "userId" | "answers" | "latitude" | "longitude" | "resolvedAt" | "deletedAt" | "createdAt", ExtArgs["result"]["measurementItem"]>
+export type MeasurementItemOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "measurementId" | "organizationId" | "researchId" | "campaignId" | "userId" | "answers" | "latitude" | "longitude" | "resolvedAt" | "resolvedSource" | "metaLocation" | "metaTimestamps" | "deletedAt" | "createdAt", ExtArgs["result"]["measurementItem"]>
 export type MeasurementItemInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   measurement?: boolean | Prisma.MeasurementDefaultArgs<ExtArgs>
 }
@@ -791,7 +878,7 @@ export type $MeasurementItemPayload<ExtArgs extends runtime.Types.Extensions.Int
      */
     answers: runtime.JsonValue
     /**
-     * Coordenadas de captura del punto
+     * Coordenadas de captura del punto (materializadas e indexadas)
      */
     latitude: number | null
     longitude: number | null
@@ -799,6 +886,18 @@ export type $MeasurementItemPayload<ExtArgs extends runtime.Types.Extensions.Int
      * Timestamp fidedigno resuelto (columna TIMESTAMP real indexada)
      */
     resolvedAt: Date
+    /**
+     * Origen del timestamp seleccionado: 'gps' | 'device' | 'manual' | 'server'
+     */
+    resolvedSource: string
+    /**
+     * Metadata de ubicación conservada: { address, accuracy }
+     */
+    metaLocation: runtime.JsonValue | null
+    /**
+     * Registro completo de timestamps de auditoría: { gps, device, manual, server }
+     */
+    metaTimestamps: runtime.JsonValue | null
     deletedAt: Date | null
     createdAt: Date
   }, ExtArgs["result"]["measurementItem"]>
@@ -1235,6 +1334,9 @@ export interface MeasurementItemFieldRefs {
   readonly latitude: Prisma.FieldRef<"MeasurementItem", 'Float'>
   readonly longitude: Prisma.FieldRef<"MeasurementItem", 'Float'>
   readonly resolvedAt: Prisma.FieldRef<"MeasurementItem", 'DateTime'>
+  readonly resolvedSource: Prisma.FieldRef<"MeasurementItem", 'String'>
+  readonly metaLocation: Prisma.FieldRef<"MeasurementItem", 'Json'>
+  readonly metaTimestamps: Prisma.FieldRef<"MeasurementItem", 'Json'>
   readonly deletedAt: Prisma.FieldRef<"MeasurementItem", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"MeasurementItem", 'DateTime'>
 }

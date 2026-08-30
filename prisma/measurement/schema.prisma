@@ -69,12 +69,21 @@ model MeasurementItem {
   /// Respuestas dinámicas del formulario de este registro
   answers        Json      @db.JsonB
 
-  /// Coordenadas de captura del punto
+  /// Coordenadas de captura del punto (materializadas e indexadas)
   latitude       Float?
   longitude      Float?
 
   /// Timestamp fidedigno resuelto (columna TIMESTAMP real indexada)
   resolvedAt     DateTime  @map("resolved_at")
+
+  /// Origen del timestamp seleccionado: 'gps' | 'device' | 'manual' | 'server'
+  resolvedSource String    @default("server") @map("resolved_source") @db.VarChar(20)
+
+  /// Metadata de ubicación conservada: { address, accuracy }
+  metaLocation   Json?     @map("meta_location") @db.JsonB
+
+  /// Registro completo de timestamps de auditoría: { gps, device, manual, server }
+  metaTimestamps Json?     @map("meta_timestamps") @db.JsonB
 
   deletedAt      DateTime? @map("deleted_at")
   createdAt      DateTime  @default(now()) @map("created_at")

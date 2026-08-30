@@ -107,6 +107,9 @@ async function runBackfill() {
             latitude,
             longitude,
             resolvedAt,
+            resolvedSource: resolvedKey,
+            metaLocation: location && Object.keys(location).length > 0 ? location : null,
+            metaTimestamps: timestamps && Object.keys(timestamps).length > 0 ? timestamps : null,
             deletedAt: itemDeletedAt,
             createdAt: itemCreatedAt,
           });

@@ -101,6 +101,9 @@ export const MeasurementItemScalarFieldEnum = {
   latitude: 'latitude',
   longitude: 'longitude',
   resolvedAt: 'resolvedAt',
+  resolvedSource: 'resolvedSource',
+  metaLocation: 'metaLocation',
+  metaTimestamps: 'metaTimestamps',
   deletedAt: 'deletedAt',
   createdAt: 'createdAt'
 } as const
