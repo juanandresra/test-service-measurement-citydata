@@ -42,13 +42,6 @@ export interface MulterFile {
   buffer: Buffer;
 }
 
-export interface LocationRow {
-  userId: string;
-  lat: number;
-  lon: number;
-  date: string;
-}
-
 export interface LocationPoint {
   lat: number;
   lon: number;
@@ -79,35 +72,6 @@ function toStartOfDayIfDateOnly(value: string): Date {
 function toEndOfDayIfDateOnly(value: string): Date {
   const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(value);
   return new Date(isDateOnly ? `${value}T23:59:59.999Z` : value);
-}
-
-interface FlattenedMeasurementRow {
-  measurement_id: string;
-  form_version: string;
-  user_id: string;
-  created_at?: Date | string | null;
-  header: unknown;
-  record: {
-    id: string;
-    answers: Record<string, unknown>;
-    meta: {
-      location: {
-        address: string | null;
-        accuracy: number;
-        latitude: number;
-        longitude: number;
-      };
-      timestamps: {
-        gps: string | null;
-        device: string;
-        manual: string | null;
-        server: string | null;
-        resolved: 'manual' | 'server' | 'device' | 'gps';
-      };
-    };
-    createdAt: string;
-    deletedAt?: string;
-  };
 }
 
 @Injectable()
