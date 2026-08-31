@@ -1354,6 +1354,9 @@ export class MeasurementService {
     const { groupBy, dateFrom, dateTo, userId, timezone } = query;
     const tz = timezone ?? 'UTC';
 
+    const filterDateFrom = dateFrom ? toStartOfDayIfDateOnly(dateFrom) : null;
+    const filterDateTo = dateTo ? toEndOfDayIfDateOnly(dateTo) : null;
+
     const filters: string[] = [
       `mi.organization_id = '${organizationId}'::uuid`,
       `mi.research_id = '${researchId}'::uuid`,
@@ -1361,14 +1364,14 @@ export class MeasurementService {
       `mi.deleted_at IS NULL`,
     ];
 
-    if (dateFrom) {
+    if (filterDateFrom) {
       filters.push(
-        `mi.resolved_at >= '${dateFrom}'::timestamptz`,
+        `mi.resolved_at >= '${filterDateFrom.toISOString()}'::timestamptz`,
       );
     }
-    if (dateTo) {
+    if (filterDateTo) {
       filters.push(
-        `mi.resolved_at <= '${dateTo}'::timestamptz`,
+        `mi.resolved_at <= '${filterDateTo.toISOString()}'::timestamptz`,
       );
     }
 
@@ -1403,7 +1406,7 @@ export class MeasurementService {
         COUNT(*)::int AS total_measurements
       FROM "measurement_item" mi
       ${whereClause}
-      GROUP BY group_key
+      GROUP BY ${selectGroupExpr}
       ORDER BY group_key ASC;
     `);
 
@@ -1555,7 +1558,7 @@ export class MeasurementService {
         COUNT(*)::int AS total_measurements
       FROM "measurement_item" mi
       ${whereClause}
-      GROUP BY mi.research_id, mi.campaign_id, group_key
+      GROUP BY mi.research_id, mi.campaign_id, ${selectGroupExpr}
       ORDER BY mi.research_id, mi.campaign_id, group_key ASC;
     `);
 
