@@ -74,6 +74,39 @@ function toEndOfDayIfDateOnly(value: string): Date {
   return new Date(isDateOnly ? `${value}T23:59:59.999Z` : value);
 }
 
+function buildDateFilterSql(
+  column: string,
+  dateFrom: string | undefined,
+  dateTo: string | undefined,
+  tz: string,
+): string[] {
+  const filters: string[] = [];
+
+  if (dateFrom) {
+    const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(dateFrom);
+    if (isDateOnly) {
+      filters.push(
+        `${column} >= ('${dateFrom}'::date::timestamp AT TIME ZONE '${tz}')`,
+      );
+    } else {
+      filters.push(`${column} >= '${dateFrom}'::timestamptz`);
+    }
+  }
+
+  if (dateTo) {
+    const isDateOnly = /^\d{4}-\d{2}-\d{2}$/.test(dateTo);
+    if (isDateOnly) {
+      filters.push(
+        `${column} < (('${dateTo}'::date + 1)::timestamp AT TIME ZONE '${tz}')`,
+      );
+    } else {
+      filters.push(`${column} <= '${dateTo}'::timestamptz`);
+    }
+  }
+
+  return filters;
+}
+
 @Injectable()
 export class MeasurementService {
   private readonly baseUploadPath = path.resolve(process.cwd(), 'files');
@@ -1354,26 +1387,13 @@ export class MeasurementService {
     const { groupBy, dateFrom, dateTo, userId, timezone } = query;
     const tz = timezone ?? 'UTC';
 
-    const filterDateFrom = dateFrom ? toStartOfDayIfDateOnly(dateFrom) : null;
-    const filterDateTo = dateTo ? toEndOfDayIfDateOnly(dateTo) : null;
-
     const filters: string[] = [
       `mi.organization_id = '${organizationId}'::uuid`,
       `mi.research_id = '${researchId}'::uuid`,
       `mi.campaign_id = '${campaignId}'::uuid`,
       `mi.deleted_at IS NULL`,
+      ...buildDateFilterSql('mi.resolved_at', dateFrom, dateTo, tz),
     ];
-
-    if (filterDateFrom) {
-      filters.push(
-        `mi.resolved_at >= '${filterDateFrom.toISOString()}'::timestamptz`,
-      );
-    }
-    if (filterDateTo) {
-      filters.push(
-        `mi.resolved_at <= '${filterDateTo.toISOString()}'::timestamptz`,
-      );
-    }
 
     if (userId && userId.length > 0) {
       const escapedUserIds = userId.map((id) => `'${id}'`).join(',');
@@ -1491,8 +1511,6 @@ export class MeasurementService {
       query;
     const tz = timezone ?? 'UTC';
 
-    const filterDateFrom = dateFrom ? toStartOfDayIfDateOnly(dateFrom) : null;
-    const filterDateTo = dateTo ? toEndOfDayIfDateOnly(dateTo) : null;
     const rIds = researchIds && researchIds.length > 0 ? researchIds : null;
     const cIds = campaignIds && campaignIds.length > 0 ? campaignIds : null;
 
@@ -1517,6 +1535,7 @@ export class MeasurementService {
     const filters: string[] = [
       `mi.organization_id = '${organizationId}'::uuid`,
       `mi.deleted_at IS NULL`,
+      ...buildDateFilterSql('mi.resolved_at', dateFrom, dateTo, tz),
     ];
 
     if (rIds) {
@@ -1527,18 +1546,6 @@ export class MeasurementService {
     if (cIds) {
       const escapedCampaignIds = cIds.map((id) => `'${id}'`).join(',');
       filters.push(`mi.campaign_id::text IN (${escapedCampaignIds})`);
-    }
-
-    if (filterDateFrom) {
-      filters.push(
-        `mi.resolved_at >= '${filterDateFrom.toISOString()}'::timestamptz`,
-      );
-    }
-
-    if (filterDateTo) {
-      filters.push(
-        `mi.resolved_at <= '${filterDateTo.toISOString()}'::timestamptz`,
-      );
     }
 
     const whereClause = `WHERE ${filters.join(' AND ')}`;
