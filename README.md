@@ -102,6 +102,12 @@ erDiagram
    - **Cron escalonado (`@Cron('0 2,3,4 * * 0')`)**: Se ejecuta todos los domingos en la madrugada a las **2:00, 3:00 y 4:00 AM** para reintentar automáticamente si la base de datos estuvo bloqueada o en tareas de mantenimiento.
    - **Operación idempotente**: Ejecuta `CREATE TABLE IF NOT EXISTS "measurement_item_YYYY_MM" PARTITION OF "measurement_item" FOR VALUES FROM (...) TO (...)`.
 
+4. **🛡️ Resiliencia y Tolerancia a Fallos (Triple Capa de Redundancia)**:
+   - **Ventana de Anticipación de 90 a 120 días**: Al pre-asignar siempre con 3 meses de anticipación, cualquier mes futuro (por ejemplo, noviembre) recibe intentos de creación cada domingo de agosto, septiembre y octubre (~12 domingos × 3 ejecuciones = **más de 36 intentos independientes** antes del día 1 del mes).
+   - **Reintentos Nocturnos Escalonados**: Si a las 2:00 AM la base de datos ejecuta backups nocturnos (`pg_dump`) o mantenimiento de VPS, reintenta automáticamente a las 3:00 AM y a las 4:00 AM.
+   - **Auto-recuperación en cada Deploy**: Si el servidor estuvo apagado durante un fin de semana, el hook `onModuleInit()` repara y pre-crea las particiones en el primer milisegundo del arranque del contenedor.
+   - **Red de Seguridad `measurement_item_default`**: Si ocurriera un fallo catastrófico prolongado o un dispositivo móvil tuviera el reloj desfasado a un año futuro, PostgreSQL rutea los registros a la partición `DEFAULT`. **El `INSERT` jamás falla ni se pierde ninguna medición de campo.**
+
 ### Mecánica de Consultas y Cero N+1 (Query Batching):
 1. **Filtro Temporal**: Toda consulta analítica filtra por la columna `resolved_at` indexada en B-Tree.
 2. **Query Batching**: Cuando se consultan 200 ítems, el servicio ejecuta **exactamente 2 consultas SQL**:
