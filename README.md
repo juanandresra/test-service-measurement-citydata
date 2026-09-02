@@ -130,6 +130,7 @@ CACHE_TTL=10000
 
 DATABASE_URL=postgresql://postgres:your_postgres_password@citydata-postgres-b1mysl:5432/service_measurement
 MEASUREMENT_DELETION_RETENTION_DAYS=30
+TZ=America/Bogota
 ```
 
 ---

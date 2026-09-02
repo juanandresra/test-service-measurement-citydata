@@ -11,6 +11,7 @@ export const envSchema = z.object({
   CACHE_TTL: z.coerce.number().min(0).default(10_000),
   DATABASE_URL: z.string().min(1),
   MEASUREMENT_DELETION_RETENTION_DAYS: z.coerce.number().min(0).default(30),
+  TZ: z.string().default('UTC'),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;
