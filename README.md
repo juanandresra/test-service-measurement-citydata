@@ -107,6 +107,18 @@ erDiagram
    - **Auto-recuperación en cada Deploy**: Si el servidor estuvo apagado durante un fin de semana, el hook `onModuleInit()` repara y pre-crea las particiones en el primer milisegundo del arranque del contenedor.
    - **Red de Seguridad `measurement_item_default`**: Si ocurriera un fallo catastrófico prolongado o un dispositivo móvil tuviera el reloj desfasado a un año futuro, PostgreSQL rutea los registros a la partición `DEFAULT`. **El `INSERT` jamás falla ni se pierde ninguna medición de campo.**
 
+5. **📊 Comparativa de Rendimiento (Caso Hipotético: 5M de Filas en 24 Meses)**:
+
+| Métrica / Comportamiento | ❌ Sin Partición (Monolito) | ✅ Con Particionamiento Mensual | Impacto Real |
+| :--- | :--- | :--- | :---: |
+| **Registros analizados** | 5,000,000 filas | 208,000 filas (`2026_09`) | **96% menos datos** |
+| **Poda de Particiones (*Pruning*)** | No existe. Escaneo total. | 23 tablas descartadas al instante | **Cero I/O innecesario** |
+| **Tamaño de Índices B-Tree** | ~2.8 GB (supera la memoria RAM) | ~115 MB (100% en RAM) | **24x menos memoria** |
+| **I/O de Disco vs RAM** | Lecturas lentas de disco duro (*Cache Miss*) | Lectura ultra veloz de RAM (*Cache Hit*) | **Latencia en microsegundos** |
+| **Tiempo de Respuesta** | **3.2 a 6.8 segundos** | **25 a 65 milisegundos** | **~100x más rápido** |
+| **Ingesta en Vivo (App Móvil)** | Bloqueos al rebalancear el índice global | Ingesta aislada a la partición activa | **Sin congestión de subida** |
+| **Mantenimiento / Depuración** | `DELETE` lento que satura la CPU y el WAL | `DROP PARTITION` en **15 ms** | **Sin downtime** |
+
 ### Mecánica de Consultas y Cero N+1 (Query Batching):
 1. **Filtro Temporal**: Toda consulta analítica filtra por la columna `resolved_at` indexada en B-Tree.
 2. **Query Batching**: Cuando se consultan 200 ítems, el servicio ejecuta **exactamente 2 consultas SQL**:
