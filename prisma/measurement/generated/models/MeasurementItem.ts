@@ -313,10 +313,11 @@ export type MeasurementItemOrderByWithRelationInput = {
 }
 
 export type MeasurementItemWhereUniqueInput = Prisma.AtLeast<{
-  id?: string
+  id_resolvedAt?: Prisma.MeasurementItemIdResolvedAtCompoundUniqueInput
   AND?: Prisma.MeasurementItemWhereInput | Prisma.MeasurementItemWhereInput[]
   OR?: Prisma.MeasurementItemWhereInput[]
   NOT?: Prisma.MeasurementItemWhereInput | Prisma.MeasurementItemWhereInput[]
+  id?: Prisma.StringFilter<"MeasurementItem"> | string
   measurementId?: Prisma.UuidFilter<"MeasurementItem"> | string
   organizationId?: Prisma.UuidFilter<"MeasurementItem"> | string
   researchId?: Prisma.UuidFilter<"MeasurementItem"> | string
@@ -332,7 +333,7 @@ export type MeasurementItemWhereUniqueInput = Prisma.AtLeast<{
   deletedAt?: Prisma.DateTimeNullableFilter<"MeasurementItem"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"MeasurementItem"> | Date | string
   measurement?: Prisma.XOR<Prisma.MeasurementScalarRelationFilter, Prisma.MeasurementWhereInput>
-}, "id">
+}, "id_resolvedAt">
 
 export type MeasurementItemOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
@@ -511,6 +512,11 @@ export type MeasurementItemListRelationFilter = {
 
 export type MeasurementItemOrderByRelationAggregateInput = {
   _count?: Prisma.SortOrder
+}
+
+export type MeasurementItemIdResolvedAtCompoundUniqueInput = {
+  id: string
+  resolvedAt: Date | string
 }
 
 export type MeasurementItemCountOrderByAggregateInput = {

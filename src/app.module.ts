@@ -10,6 +10,8 @@ import { envSchema } from './common/config/env/env.schema';
 import { cacheConfig } from './common/config/cache/cache.config';
 import { HealthModule } from './modules/health/health.module';
 import { MeasurementModule } from './modules/measurement/measurement.module';
+import { PartitionModule } from './modules/partition/partition.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -21,9 +23,11 @@ import { MeasurementModule } from './modules/measurement/measurement.module';
     }),
     LoggerModule.forRootAsync(loggerConfig),
     CacheModule.registerAsync(cacheConfig),
-    // Modulos API
+    ScheduleModule.forRoot(),
+    // Modulos API y background
     HealthModule,
     MeasurementModule,
+    PartitionModule,
   ],
   providers: [AppService],
 })

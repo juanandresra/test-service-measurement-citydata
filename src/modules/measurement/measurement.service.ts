@@ -787,7 +787,12 @@ export class MeasurementService {
 
     // Soft-delete the item directly on measurementItem
     await this.prisma.measurementItem.update({
-      where: { id: itemId },
+      where: {
+        id_resolvedAt: {
+          id: itemId,
+          resolvedAt: targetItem.resolvedAt,
+        },
+      },
       data: { deletedAt: now },
     });
 

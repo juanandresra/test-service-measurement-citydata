@@ -53,7 +53,7 @@ model Measurement {
 /// 2. MeasurementItem (Registro Individual Normalizado)
 /// ======================================================
 model MeasurementItem {
-  id             String    @id @db.VarChar(64)
+  id             String    @db.VarChar(64)
   measurementId  String    @map("measurement_id") @db.Uuid
   measurement    Measurement @relation(fields: [measurementId], references: [id], onDelete: Cascade)
 
@@ -85,6 +85,7 @@ model MeasurementItem {
   deletedAt      DateTime? @map("deleted_at")
   createdAt      DateTime  @default(now()) @map("created_at")
 
+  @@id([id, resolvedAt])
   @@index([measurementId])
   @@index([organizationId, campaignId, resolvedAt])
   @@index([campaignId, userId, resolvedAt])

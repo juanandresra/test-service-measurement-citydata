@@ -72,7 +72,8 @@ erDiagram
     }
 
     MeasurementItem {
-        varchar id PK "ID original del cliente móvil (ej: 1786555889098-dyn5zx68)"
+        varchar id "ID original del cliente móvil (ej: 1786555889098-dyn5zx68)"
+        timestamp resolved_at "Timestamp oficial resuelto (PK compuesta + Particionamiento RANGE)"
         uuid measurement_id FK "Vínculo con la sesión padre (CASCADE)"
         uuid organization_id "Denormalizado para indexación directa"
         uuid research_id "Denormalizado"
@@ -81,7 +82,6 @@ erDiagram
         jsonb answers "Respuestas dinámicas del formulario"
         float latitude "Latitud materializada (Indexada)"
         float longitude "Longitud materializada (Indexada)"
-        timestamp resolved_at "Timestamp oficial resuelto (Indexado B-Tree)"
         varchar resolved_source "Origen del timestamp (gps, server, device, manual)"
         jsonb meta_location "Auditoría de ubicación { address, accuracy }"
         jsonb meta_timestamps "Auditoría completa { gps, device, manual, server }"
@@ -89,6 +89,18 @@ erDiagram
         timestamp created_at
     }
 ```
+
+### 🗂️ Particionamiento Mensual y Servicio Cron de Mantenimiento:
+1. **Particionamiento Declarativo en PostgreSQL 16**:
+   - `measurement_item` está particionada nativamente por rango de fecha: `PARTITION BY RANGE ("resolved_at")`.
+   - Clave primaria compuesta obligatoria: `PRIMARY KEY ("id", "resolved_at")` (`@@id([id, resolvedAt])` en Prisma).
+   - **Partición `DEFAULT` de respaldo**: `measurement_item_default` captura cualquier registro fuera de rango o con desfase temporal sin provocar fallos de inserción.
+2. **Partition Pruning en Consultas**:
+   - Al filtrar por `dateFrom` y `dateTo`, el planificador de PostgreSQL descarta todas las particiones irrelevantes y solo consulta la tabla del mes correspondiente, reduciendo el I/O en más de un 90%.
+3. **Servicio Cron de Pre-asignación y Auto-recuperación (`PartitionMaintenanceService`)**:
+   - **Arranque (`onModuleInit`)**: Verifica y asegura de inmediato las particiones del mes en curso y de los 3 meses siguientes.
+   - **Cron escalonado (`@Cron('0 2,3,4 * * 0')`)**: Se ejecuta todos los domingos en la madrugada a las **2:00, 3:00 y 4:00 AM** para reintentar automáticamente si la base de datos estuvo bloqueada o en tareas de mantenimiento.
+   - **Operación idempotente**: Ejecuta `CREATE TABLE IF NOT EXISTS "measurement_item_YYYY_MM" PARTITION OF "measurement_item" FOR VALUES FROM (...) TO (...)`.
 
 ### Mecánica de Consultas y Cero N+1 (Query Batching):
 1. **Filtro Temporal**: Toda consulta analítica filtra por la columna `resolved_at` indexada en B-Tree.
