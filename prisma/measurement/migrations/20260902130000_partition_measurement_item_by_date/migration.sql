@@ -39,67 +39,18 @@ CREATE TABLE IF NOT EXISTS "measurement_item" (
     CONSTRAINT "measurement_item_pkey" PRIMARY KEY ("id", "resolved_at")
 ) PARTITION BY RANGE ("resolved_at");
 
--- 4. Partición DEFAULT de salvaguarda
+-- 4. Partición DEFAULT de salvaguarda (las particiones mensuales se crean dinámicamente al levantar el servicio)
 CREATE TABLE IF NOT EXISTS "measurement_item_default"
     PARTITION OF "measurement_item" DEFAULT;
 
--- 5. Particiones año 2026
-CREATE TABLE IF NOT EXISTS "measurement_item_2026_01"
-    PARTITION OF "measurement_item"
-    FOR VALUES FROM ('2026-01-01 00:00:00') TO ('2026-02-01 00:00:00');
-
-CREATE TABLE IF NOT EXISTS "measurement_item_2026_02"
-    PARTITION OF "measurement_item"
-    FOR VALUES FROM ('2026-02-01 00:00:00') TO ('2026-03-01 00:00:00');
-
-CREATE TABLE IF NOT EXISTS "measurement_item_2026_03"
-    PARTITION OF "measurement_item"
-    FOR VALUES FROM ('2026-03-01 00:00:00') TO ('2026-04-01 00:00:00');
-
-CREATE TABLE IF NOT EXISTS "measurement_item_2026_04"
-    PARTITION OF "measurement_item"
-    FOR VALUES FROM ('2026-04-01 00:00:00') TO ('2026-05-01 00:00:00');
-
-CREATE TABLE IF NOT EXISTS "measurement_item_2026_05"
-    PARTITION OF "measurement_item"
-    FOR VALUES FROM ('2026-05-01 00:00:00') TO ('2026-06-01 00:00:00');
-
-CREATE TABLE IF NOT EXISTS "measurement_item_2026_06"
-    PARTITION OF "measurement_item"
-    FOR VALUES FROM ('2026-06-01 00:00:00') TO ('2026-07-01 00:00:00');
-
-CREATE TABLE IF NOT EXISTS "measurement_item_2026_07"
-    PARTITION OF "measurement_item"
-    FOR VALUES FROM ('2026-07-01 00:00:00') TO ('2026-08-01 00:00:00');
-
-CREATE TABLE IF NOT EXISTS "measurement_item_2026_08"
-    PARTITION OF "measurement_item"
-    FOR VALUES FROM ('2026-08-01 00:00:00') TO ('2026-09-01 00:00:00');
-
-CREATE TABLE IF NOT EXISTS "measurement_item_2026_09"
-    PARTITION OF "measurement_item"
-    FOR VALUES FROM ('2026-09-01 00:00:00') TO ('2026-10-01 00:00:00');
-
-CREATE TABLE IF NOT EXISTS "measurement_item_2026_10"
-    PARTITION OF "measurement_item"
-    FOR VALUES FROM ('2026-10-01 00:00:00') TO ('2026-11-01 00:00:00');
-
-CREATE TABLE IF NOT EXISTS "measurement_item_2026_11"
-    PARTITION OF "measurement_item"
-    FOR VALUES FROM ('2026-11-01 00:00:00') TO ('2026-12-01 00:00:00');
-
-CREATE TABLE IF NOT EXISTS "measurement_item_2026_12"
-    PARTITION OF "measurement_item"
-    FOR VALUES FROM ('2026-12-01 00:00:00') TO ('2027-01-01 00:00:00');
-
--- 6. Recrear índices en la tabla maestra
+-- 5. Recrear índices en la tabla maestra
 CREATE INDEX IF NOT EXISTS "measurement_item_measurement_id_idx" ON "measurement_item"("measurement_id");
 CREATE INDEX IF NOT EXISTS "measurement_item_organization_id_campaign_id_resolved_at_idx" ON "measurement_item"("organization_id", "campaign_id", "resolved_at");
 CREATE INDEX IF NOT EXISTS "measurement_item_campaign_id_user_id_resolved_at_idx" ON "measurement_item"("campaign_id", "user_id", "resolved_at");
 CREATE INDEX IF NOT EXISTS "measurement_item_organization_id_resolved_at_idx" ON "measurement_item"("organization_id", "resolved_at");
 CREATE INDEX IF NOT EXISTS "measurement_item_resolved_at_idx" ON "measurement_item"("resolved_at");
 
--- 7. Recrear la foreign key hacia measurement
+-- 6. Recrear la foreign key hacia measurement
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -110,7 +61,7 @@ BEGIN
   END IF;
 END $$;
 
--- 8. Migrar todos los datos existentes de measurement_item_old a la nueva measurement_item
+-- 7. Migrar todos los datos existentes de measurement_item_old a la nueva measurement_item
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'measurement_item_old') THEN

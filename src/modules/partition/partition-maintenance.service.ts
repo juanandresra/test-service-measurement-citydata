@@ -19,7 +19,8 @@ export class PartitionMaintenanceService implements OnModuleInit {
 
   /**
    * Gancho de ciclo de vida de NestJS. Se ejecuta automáticamente al inicializar el módulo.
-   * Lee la zona horaria (TZ) desde el entorno (ej: America/Bogota) y programa el CronJob.
+   * Crea dinámicamente las particiones del año vigente omitiendo los meses pasados + 2 meses del año siguiente,
+   * y programa el CronJob dominical de mantenimiento.
    */
   async onModuleInit(): Promise<void> {
     const tz = this.configService.get<string>('TZ') ?? 'UTC';
@@ -36,9 +37,10 @@ export class PartitionMaintenanceService implements OnModuleInit {
       'PartitionMaintenanceService inicializado exitosamente. Sincronización de zona horaria verificada.',
     );
 
-    // 1. Verificación y pre-asignación inmediata de particiones al arranque
+    // 1. Verificación y pre-creación dinámica al levantar el microservicio:
+    // Crea todos los meses restantes del año vigente (omitiendo los que ya pasaron) + 2 meses del siguiente año
     try {
-      await this.ensureUpcomingPartitions(3);
+      await this.ensureCurrentYearAndUpcomingPartitions();
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       this.logger.error(`Error inicializando particiones al arranque: ${msg}`);
@@ -87,19 +89,37 @@ export class PartitionMaintenanceService implements OnModuleInit {
       },
       'Ejecutando mantenimiento programado de particiones (Domingo en zona horaria configurada)...',
     );
-    await this.ensureUpcomingPartitions(3);
+    await this.ensureCurrentYearAndUpcomingPartitions();
   }
 
   /**
-   * Asegura que existan las particiones para el mes actual y los N meses siguientes
-   * basándose en la zona horaria configurada.
+   * Asegura que existan las particiones para todos los meses restantes del año vigente
+   * (omitiendo los meses que ya pasaron) más 2 meses de colchón del año siguiente.
+   *
+   * Ejemplos de comportamiento:
+   *  - Si se ejecuta en Septiembre 2026 (mes 9):
+   *    Crea 2026_09, 2026_10, 2026_11, 2026_12 (año actual)
+   *    más 2027_01 y 2027_02 (2 meses del año siguiente). Total: 6 particiones.
+   *  - Si se ejecuta un 31 de Diciembre (mes 12) por primera vez:
+   *    Crea 2026_12 (mes actual)
+   *    más 2027_01 y 2027_02 (2 meses del año siguiente). Total: 3 particiones.
+   *  - Si se ejecuta en Enero (mes 1):
+   *    Crea los 12 meses del año en curso
+   *    más 2 meses del siguiente año (Enero y Febrero). Total: 14 particiones.
    */
-  async ensureUpcomingPartitions(monthsAhead = 3): Promise<string[]> {
+  async ensureCurrentYearAndUpcomingPartitions(): Promise<string[]> {
     const tz = this.configService.get<string>('TZ') ?? 'UTC';
+    const now = DateTime.now().setZone(tz);
     const createdPartitions: string[] = [];
-    const baseDate = DateTime.now().setZone(tz).startOf('month');
 
-    for (let i = 0; i <= monthsAhead; i++) {
+    // Meses restantes del año vigente después del actual (ej: si mes = 9, faltan 10, 11, 12 = 3 meses)
+    const remainingMonthsThisYear = 12 - now.month;
+    // Sumamos 2 meses de colchón del año siguiente
+    const totalMonthsAhead = remainingMonthsThisYear + 2;
+
+    const baseDate = now.startOf('month');
+
+    for (let i = 0; i <= totalMonthsAhead; i++) {
       const targetMonth = baseDate.plus({ months: i });
       const nextMonth = targetMonth.plus({ months: 1 });
 

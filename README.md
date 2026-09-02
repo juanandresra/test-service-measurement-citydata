@@ -97,13 +97,12 @@ erDiagram
    - **Partición `DEFAULT` de respaldo**: `measurement_item_default` captura cualquier registro fuera de rango o con desfase temporal sin provocar fallos de inserción.
 2. **Partition Pruning en Consultas**:
    - Al filtrar por `dateFrom` y `dateTo`, el planificador de PostgreSQL descarta todas las particiones irrelevantes y solo consulta la tabla del mes correspondiente, reduciendo el I/O en más de un 90%.
-3. **Servicio Cron de Pre-asignación y Auto-recuperación (`PartitionMaintenanceService`)**:
-   - **Arranque (`onModuleInit`)**: Verifica y asegura de inmediato las particiones del mes en curso y de los 3 meses siguientes.
-   - **Cron escalonado (`@Cron('0 2,3,4 * * 0')`)**: Se ejecuta todos los domingos en la madrugada a las **2:00, 3:00 y 4:00 AM** para reintentar automáticamente si la base de datos estuvo bloqueada o en tareas de mantenimiento.
-   - **Operación idempotente**: Ejecuta `CREATE TABLE IF NOT EXISTS "measurement_item_YYYY_MM" PARTITION OF "measurement_item" FOR VALUES FROM (...) TO (...)`.
+3. **Servicio Dinámico de Pre-asignación y Auto-recuperación (`PartitionMaintenanceService`)**:
+   - **Arranque Dinámico (`onModuleInit`)**: La migración base de base de datos no contiene particiones estáticas pre-cableadas. Al levantar el microservicio, el hook `onModuleInit()` calcula la fecha actual y crea de forma dinámica **todos los meses restantes del año vigente (omitiendo los que ya pasaron) más 2 meses de colchón del año siguiente** (ej: si se arranca en septiembre 2026, crea septiembre a diciembre 2026 + enero y febrero 2027; si se corre un 31 de diciembre por primera vez, crea diciembre + enero y febrero del siguiente año).
+   - **Cron escalonado dominical (`@Cron('0 2,3,4 * * 0')`)**: Se ejecuta todos los domingos en la madrugada a las **2:00, 3:00 y 4:00 AM** en la zona horaria configurada (`TZ`), verificando y extendiendo las particiones con total idempotencia (`CREATE TABLE IF NOT EXISTS`).
 
 4. **🛡️ Resiliencia y Tolerancia a Fallos (Triple Capa de Redundancia)**:
-   - **Ventana de Anticipación de 90 a 120 días**: Al pre-asignar siempre con 3 meses de anticipación, cualquier mes futuro (por ejemplo, noviembre) recibe intentos de creación cada domingo de agosto, septiembre y octubre (~12 domingos × 3 ejecuciones = **más de 36 intentos independientes** antes del día 1 del mes).
+   - **Ventana Dinámica de Anticipación**: Al mantener cubiertos los meses del año y los 2 meses siguientes, cualquier mes futuro recibe intentos continuos cada semana en múltiples iteraciones antes de comenzar.
    - **Reintentos Nocturnos Escalonados**: Si a las 2:00 AM la base de datos ejecuta backups nocturnos (`pg_dump`) o mantenimiento de VPS, reintenta automáticamente a las 3:00 AM y a las 4:00 AM.
    - **Auto-recuperación en cada Deploy**: Si el servidor estuvo apagado durante un fin de semana, el hook `onModuleInit()` repara y pre-crea las particiones en el primer milisegundo del arranque del contenedor.
    - **Red de Seguridad `measurement_item_default`**: Si ocurriera un fallo catastrófico prolongado o un dispositivo móvil tuviera el reloj desfasado a un año futuro, PostgreSQL rutea los registros a la partición `DEFAULT`. **El `INSERT` jamás falla ni se pierde ninguna medición de campo.**
